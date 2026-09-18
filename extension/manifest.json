@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "求职搭子 BOSS 侧栏",
+  "version": "1.0.0.1",
+  "version_name": "1.0.0-rc.1",
+  "minimum_chrome_version": "116",
+  "description": "在 BOSS 网页旁判断岗位、定向改简历和准备回复。连接用户本机的求职搭子服务。",
+  "permissions": ["sidePanel", "storage", "activeTab"],
+  "host_permissions": ["https://www.zhipin.com/*", "https://zhipin.com/*", "http://127.0.0.1/*"],
+  "action": {"default_title": "打开求职搭子"},
+  "side_panel": {"default_path": "panel.html"},
+  "background": {"service_worker": "background.js"},
+  "content_scripts": [{"matches": ["https://www.zhipin.com/*", "https://zhipin.com/*"], "js": ["extractor.js", "content.js"], "run_at": "document_idle"}],
+  "content_security_policy": {"extension_pages": "script-src 'self'; object-src 'none'"}
+}

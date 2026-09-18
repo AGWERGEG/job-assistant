@@ -1,0 +1,135 @@
+/* Shared visual layer for the workbench and packaged sidebar. Layout lives in existing stylesheets. */
+:root{
+ --ui-bg:#f5f5f0;
+ --ui-surface:#ffffff;
+ --ui-soft:#f1f4ee;
+ --ui-ink:#263c33;
+ --ui-muted:#617068;
+ --ui-accent:#315e4b;
+ --ui-accent-hover:#244b3b;
+ --ui-tint:#e8f0e8;
+ --ui-line:#dce3d9;
+ --ui-line-strong:#b5c8b8;
+ --ui-warning:#785821;
+ --ui-warning-bg:#faf1df;
+ --ui-error:#923f35;
+ --ui-error-bg:#fff0ec;
+ --ui-radius:10px;
+ --ui-radius-panel:16px;
+ --ui-shadow:0 12px 40px #203e3014;
+ --ui-font:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+ --accent:var(--ui-accent);--line:var(--ui-line);--muted:var(--ui-muted);
+ font-family:var(--ui-font);font-size:14px;color:var(--ui-ink);background:var(--ui-bg);
+ color-scheme:light;
+}
+body{background:var(--ui-bg);color:var(--ui-ink)}
+::selection{background:#d9e9db;color:#213f2f}
+button,input,textarea,select{font-family:var(--ui-font)}
+button{background:var(--ui-accent);color:#fff;border-radius:var(--ui-radius);font-weight:550;transition:background-color .14s ease,border-color .14s ease,box-shadow .14s ease}
+button:hover:not(:disabled){background:var(--ui-accent-hover);filter:none}
+button:disabled{background:#e5e9e2;color:#69756c;opacity:1;cursor:not-allowed;box-shadow:none}
+button.secondary{background:var(--ui-soft);color:var(--ui-accent);border:1px solid var(--ui-line);margin-left:0}
+button.secondary:hover:not(:disabled){background:var(--ui-tint);border-color:var(--ui-line-strong)}
+button.text-button,button.icon-button{background:transparent;color:var(--ui-accent)}
+button.text-button:hover:not(:disabled),button.icon-button:hover:not(:disabled){background:var(--ui-tint)}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--ui-accent);outline-offset:3px}
+input:not([type=checkbox]),textarea,select{background:var(--ui-surface);color:var(--ui-ink);border:1px solid var(--ui-line-strong);border-radius:var(--ui-radius);font-family:var(--ui-font);font-size:14px;line-height:1.65}
+input:focus,textarea:focus,select:focus{outline:2px solid #789f82;outline-offset:2px}
+input[type=checkbox]{accent-color:var(--ui-accent)}
+::placeholder{color:#6b786f;opacity:1}
+small,label,footer,.empty{color:var(--ui-muted)}
+small{font-size:12px}
+a{color:var(--ui-accent);text-underline-offset:3px}
+summary{color:var(--ui-ink);font-weight:550}
+summary::marker{color:var(--ui-accent);font-size:.85em}
+dialog{border-color:var(--ui-line);border-radius:var(--ui-radius-panel);background:var(--ui-surface);color:var(--ui-ink);box-shadow:var(--ui-shadow)}
+dialog::backdrop{background:#233f3547}
+.buddy-mark{display:inline-grid;place-items:center;flex-shrink:0;width:30px;height:30px;border-radius:11px 11px 11px 4px;background:var(--ui-accent);color:#fff;font:600 15px/1 var(--ui-font);letter-spacing:0}
+#messages{scrollbar-width:thin;scrollbar-color:#c6d1c4 transparent}
+.turn{border:0}
+.turn p{font-size:14px;line-height:1.85}
+.turn .user,.turn .user-message{background:var(--ui-tint);color:var(--ui-ink);border-radius:13px 13px 4px 13px;border:1px solid #dce8da}
+.turn .reply,.turn .buddy-message{color:var(--ui-ink)}
+.turn button{background:transparent;color:var(--ui-accent);border:1px solid var(--ui-line);font-weight:500}
+.turn button:hover:not(:disabled){background:var(--ui-soft);border-color:var(--ui-line-strong)}
+.turn small{font-size:11px;color:var(--ui-muted)}
+/* Workbench */
+.workbench>header{background:var(--ui-surface);border-color:var(--ui-line)}
+.workbench .logo{gap:10px;font:inherit;color:var(--ui-ink)}
+.workbench .logo #brand{font:600 18px/1.4 var(--ui-font)}
+.workbench .logo .buddy-mark{font:600 15px/1 var(--ui-font);color:#fff}
+.workbench .badge{color:var(--ui-muted)}
+.workbench .workspace-nav{background:var(--ui-bg);border-color:var(--ui-line)}
+.workbench .workspace-nav button,.workbench .opportunity-tabs button{font-weight:500;color:var(--ui-muted);border-radius:var(--ui-radius)}
+.workbench .workspace-nav .active,.workbench .opportunity-tabs .active{background:var(--ui-tint);color:var(--ui-accent);box-shadow:inset 0 -2px 0 var(--ui-accent);font-weight:600}
+.workbench .workspace-nav button:hover,.workbench .opportunity-tabs button:hover{background:var(--ui-soft);color:var(--ui-accent)}
+.workbench .panel{border-color:var(--ui-line);border-radius:var(--ui-radius-panel);box-shadow:none;background:var(--ui-surface)}
+.workbench:not(.first-use-mode) #screen-chat #chat-panel{border-color:var(--ui-line);border-radius:var(--ui-radius-panel);box-shadow:0 4px 22px #233f3505}
+.workbench #chat-panel .section-title{border-color:var(--ui-line)}
+.workbench #chat-title{font-weight:600;letter-spacing:.1px}
+.workbench .chat-tools button{font-size:12px;padding:5px 6px;border-radius:6px}
+.workbench #session-open{color:var(--ui-accent);background:var(--ui-soft)}
+.workbench #chat-form{border-color:var(--ui-line)}
+.workbench:not(.first-use-mode) #chat-form .task-actions button{background:var(--ui-soft);color:var(--ui-accent);border-color:var(--ui-line);font-weight:500;border-radius:8px}
+.workbench:not(.first-use-mode) #chat-form .task-actions button:hover:not(:disabled){background:var(--ui-tint);border-color:var(--ui-line-strong)}
+.workbench:not(.first-use-mode) #chat-form .task-actions button:disabled{background:#f2f3ef;color:#69756c}
+.workbench #chat-form #message{background:#fcfdfb;border-color:var(--ui-line-strong)}
+.workbench #chat-form>#rest-wish{color:var(--ui-muted)}
+.workbench #chat-form>#rest-wish:hover{background:var(--ui-soft)}
+.workbench #messages .empty{font-size:14px;line-height:1.85;padding:26px 12px}
+.workbench #messages .user{margin-left:auto;max-width:88%;padding:10px 14px;width:fit-content}
+.workbench #messages .reply{padding:8px 4px;margin:8px 16px 8px 0}
+.workbench #messages .turn{padding:12px 0 20px}
+.workbench #notice,.workbench #task-notice{background:var(--ui-tint);color:var(--ui-accent);border-radius:var(--ui-radius)}
+.workbench #notice.error,.workbench #task-notice.error{background:var(--ui-error-bg);color:var(--ui-error);border-left:3px solid var(--ui-error)}
+.workbench .field-attention{outline-color:var(--ui-error)!important}
+.workbench .job-list button{background:#f7f8f4;color:var(--ui-ink);border:1px solid transparent}
+.workbench .job-list button:hover{background:var(--ui-soft)}
+.workbench .job-list button.selected{background:var(--ui-tint);border-color:var(--ui-line-strong);border-left:3px solid var(--ui-accent)}
+.workbench #general-chat{font-size:12px}
+.workbench #opportunity-title{font-weight:600;letter-spacing:0}
+.workbench #screen-opportunities .task{border-color:var(--ui-line);border-radius:12px}
+.workbench #screen-opportunities .task:not([open]){background:#f9faf7}
+.workbench #screen-opportunities .task[open]>summary{border-color:var(--ui-line)}
+.workbench .task pre,.workbench .setup-grid pre{background:var(--ui-soft);color:var(--ui-ink);font-family:var(--ui-font);line-height:1.8;border-radius:var(--ui-radius)}
+.workbench .task textarea{background:#fcfdfb}
+.workbench #screen-opportunities #company-panel,.workbench #screen-opportunities #job-editor{background:var(--ui-surface)}
+.workbench .delivery-link{background:var(--ui-soft);color:var(--ui-accent);border:1px solid var(--ui-line)}
+.workbench .delivery-link:hover{background:var(--ui-tint);border-color:var(--ui-line-strong)}
+.workbench .version,.workbench #resume-versions-panel{border-color:var(--ui-line);border-radius:12px;background:var(--ui-surface)}
+.workbench .upload{background:var(--ui-soft);border-color:var(--ui-line-strong)}
+.workbench #delete-data,.workbench #extension-revoke{background:var(--ui-error-bg);color:var(--ui-error);border:1px solid #e7c6c0}
+.workbench #import-status{color:var(--ui-warning)}
+.workbench .questions{background:var(--ui-warning-bg);color:var(--ui-warning);border-color:#e9d8b5}
+.workbench .primary-output{background:var(--ui-soft);border-color:var(--ui-accent)}
+.workbench.first-use-mode #onboarding-flow{background:var(--ui-surface);border:1px solid var(--ui-line);border-top:3px solid var(--ui-accent);border-radius:var(--ui-radius-panel);box-shadow:0 5px 24px #233f3505}
+.workbench.first-use-mode #onboarding-flow h1{color:var(--ui-ink);font-size:26px;letter-spacing:0}
+.workbench .onboarding-flow .eyebrow{font-size:12px;letter-spacing:1px;color:var(--ui-accent)}
+.workbench .guide-role-card{background:var(--ui-surface);color:var(--ui-ink);border:2px solid var(--ui-line);box-shadow:none}
+.workbench .guide-role-card:hover{background:var(--ui-soft);color:var(--ui-ink)}
+.workbench .guide-role-card.selected{background:var(--ui-tint);border-color:var(--ui-accent);box-shadow:none}
+.workbench .guide-role-card small{color:var(--ui-muted);font-size:12px}
+/* Sidebar */
+.sidebar header{border-bottom:1px solid var(--ui-line)}
+.sidebar #connection-badge{display:flex;align-items:center;gap:5px;color:var(--ui-muted)}
+.sidebar #connection-badge::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ui-accent)}
+.sidebar.unpaired #connection-badge::before{background:#927649}
+.sidebar #pinned-context{border-color:var(--ui-line)}
+.sidebar .target-button{border-radius:6px}
+.sidebar .target-button:hover{background:var(--ui-soft);color:var(--ui-ink)}
+.sidebar #candidate-notice{background:var(--ui-warning-bg);border:1px solid #e9d8b5}
+.sidebar #candidate-kicker{color:var(--ui-warning)}
+.sidebar .turn .user-message{margin-left:24px}
+.sidebar #composer{background:var(--ui-bg);border-color:var(--ui-line)}
+.sidebar .actions button{background:var(--ui-soft);color:var(--ui-accent);border:1px solid var(--ui-line);font-weight:500}
+.sidebar .actions button:hover:not(:disabled){background:var(--ui-tint);border-color:var(--ui-line-strong)}
+.sidebar .actions button:disabled{color:#69756c;background:#f2f3ef}
+.sidebar #message{background:var(--ui-surface);border-color:var(--ui-line-strong)}
+.sidebar #status.error{background:var(--ui-error-bg);color:var(--ui-error);border-left:3px solid var(--ui-error)}
+.sidebar .dialog-heading{background:var(--ui-surface)}
+.sidebar dialog section,.sidebar dialog details{border-color:var(--ui-line)}
+.sidebar #pairing{border-radius:var(--ui-radius-panel);border-color:var(--ui-line);background:var(--ui-surface)}
+.sidebar .onboarding-card{border:1px solid var(--ui-line-strong);background:var(--ui-tint);border-radius:12px}
+.sidebar #disconnect{background:var(--ui-error-bg);color:var(--ui-error);border-color:#e7c6c0}
+@media(max-width:340px){.sidebar #connection-badge{display:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}

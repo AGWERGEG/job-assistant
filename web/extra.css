@@ -1,0 +1,147 @@
+button.secondary{background:#e8eee3;color:#536b58;margin-left:8px}
+#task-notice{display:none;position:sticky;top:12px;z-index:20;border-radius:10px;padding:13px 16px;margin:-8px 0 18px;background:#e3eddb;color:#395431;line-height:1.6;box-shadow:0 5px 18px #27442f20}
+#task-notice.error{background:#fcece5;color:#87492d}
+.field-attention{outline:3px solid #d97154!important;outline-offset:2px}
+.decision{font-size:16px;font-weight:700;color:#244d35;margin:14px 0 6px}
+.primary-output{margin:15px 0;padding:16px;background:#f0f5eb;border-left:4px solid #5b835e;border-radius:8px}
+.primary-output strong,.questions strong{display:block;margin-bottom:8px;color:#34533d}
+.primary-output pre{margin:0;background:transparent;padding:0;white-space:pre-wrap;font:14px/1.8 inherit}
+.questions{margin:14px 0;padding:14px 16px;background:#fff7e8;border:1px solid #eeddb9;border-radius:8px;color:#675632}
+.questions ul{padding-left:19px;line-height:1.8}.questions button{background:#7a6842}
+select{display:block;width:100%;margin-top:8px;padding:10px;border:1px solid #dbe2d6;border-radius:8px;background:#fcfdfa;color:#283c30;font:inherit}input[type=checkbox]{width:auto;margin-right:8px}summary{cursor:pointer;font-weight:600;line-height:1.8}.setup-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin-top:26px}.setup-grid h2{font-size:15px}.setup-grid pre{max-height:240px;overflow:auto;font:12px/1.7 inherit;background:#f3f6ef;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere}#messages{max-height:520px;min-height:160px;overflow:auto;padding:18px 0}.turn{border-bottom:1px solid #e5ecdf;padding:14px 0}.turn p,.turn pre{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.8}.turn .user{background:#eef3e8;padding:12px 16px;border-radius:12px;margin-left:36px}.turn .reply{padding:10px 16px;margin-right:25px}.turn button{font-size:12px;padding:8px 12px;margin-right:8px}.version{padding:12px;border:1px solid #dde5d8;border-radius:10px;margin:10px 0}.version pre{white-space:pre-wrap}.secondary{background:#e8eee1;color:#35563f}.task textarea{min-height:230px}.task:target{outline:2px solid #789a78}.workspace{margin-top:24px}.empty{line-height:1.8}#chat-status{margin-top:10px}button{margin-top:4px}@media(max-width:1000px){.setup-grid{grid-template-columns:1fr}.workspace{grid-template-columns:260px minmax(0,1fr)}}@media(max-width:760px){.workspace{grid-template-columns:1fr}.intro{display:block}.guide{max-width:none}}
+dialog {width:min(760px,90vw);max-height:90vh;overflow:auto;border:1px solid #cad4c7;border-radius:14px;padding:24px;color:#244335;background:#fcfdf9;}
+dialog::backdrop {background:#15332680;}
+#export-content {width:100%;min-height:300px;box-sizing:border-box;}
+#export-note {white-space:pre-line;}
+.export-actions {display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+#moment-text {white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.9;}
+#interview-panel small {display:block;margin-top:12px;}
+[hidden] {display:none!important;}
+.workspace-nav,.opportunity-tabs {display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+.workspace-nav {position:sticky;top:0;z-index:5;background:#f3f5ef;padding:12px 0;border-bottom:1px solid #dfe5db;}
+.workspace-nav button,.opportunity-tabs button {background:transparent;color:#476450;}
+.workspace-nav .active,.opportunity-tabs .active {background:#315d43;color:white;}
+.opportunity-layout {display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;transition:grid-template-columns .18s ease;}
+.opportunity-layout.list-collapsed {grid-template-columns:58px minmax(0,1fr);}
+#opportunity-list {max-height:78vh;overflow:auto;position:sticky;top:84px;align-self:start;}
+#opportunity-list .opportunity-list-header {display:flex;align-items:center;justify-content:space-between;gap:10px;}
+#opportunity-list .opportunity-list-header h2 {margin:0;}
+#opportunity-list #job-search {margin:14px 0 8px;}
+#opportunity-list.collapsed {padding:12px 8px;overflow:hidden;}
+#opportunity-list.collapsed .opportunity-list-header {justify-content:center;}
+#opportunity-list.collapsed .opportunity-list-header h2,#opportunity-list.collapsed #general-chat,#opportunity-list.collapsed #job-search,#opportunity-list.collapsed #job-list,#opportunity-list.collapsed #new-job {display:none;}
+#opportunity-list.collapsed #toggle-opportunity-list {writing-mode:vertical-rl;padding:8px 5px;min-height:76px;}
+#opportunity-title {font-size:24px;}
+.opportunity-tabs {margin-top:20px;}
+.delivery-link {display:block;background:#edf3e7;color:#315d43;margin-top:10px;text-align:left;width:100%;}
+#resume-session.compact-session {padding:15px 18px;}
+#resume-session.compact-session>p {font-weight:650;margin:0 0 10px;}
+.inbox-panel {margin-top:14px;border-top:1px solid #e1e7dc;padding-top:12px;}
+.inbox-panel>summary {font-weight:650;}
+#delivery-inbox {padding-top:6px;}
+#delivery-inbox h3 {font-size:12px;margin:12px 0 4px;color:#607463;}
+.inbox-actions {display:flex;gap:16px;margin-top:12px;}
+#company-panel>summary {font-size:16px;}
+#company-panel .compact-help {color:#68796c;margin-bottom:14px;}
+.company-group {border-top:1px solid #e3e9df;padding:11px 0;}
+.company-group>.company-material {margin-left:14px;}
+.company-material>summary {font-weight:550;}
+.company-collapse {display:block;margin:16px 0 0 auto;}
+#screen-chat {max-width:900px;margin:auto;display:flex;flex-direction:column;}
+#screen-chat .intro,#screen-chat #welcome {display:none;}#screen-chat .guide {display:none;}
+#screen-chat #onboarding-flow{order:0}#screen-chat #chat-panel{order:1}#screen-chat #resume-session{order:2}
+#screen-chat #chat-panel{border:1px solid #d5e1d0;box-shadow:0 5px 20px #2946370b;padding:24px;}
+#screen-chat #chat-panel .task-actions{margin-top:0;margin-bottom:16px;}
+#screen-chat #chat-panel #messages{min-height:360px;max-height:58vh;padding:8px 2px;}
+#screen-chat #chat-panel #message{min-height:72px;}
+#screen-chat #resume-session{margin-top:14px;}
+#screen-chat h1 {font-size:25px;}
+#screen-chat #messages {max-height:55vh;min-height:200px;}
+#screen-profile .setup-grid {grid-template-columns:1fr;max-width:760px;margin:auto;}
+#resume-versions-panel {background:white;padding:20px;border-radius:12px;}
+#screen-opportunities .opportunity-layout>section{min-width:0;}
+#screen-opportunities #opportunity-overview{display:flex;flex-direction:column;}
+#screen-opportunities #opportunity-overview>#job-editor{order:0;}
+#screen-opportunities #opportunity-overview>#company-panel{order:1;}
+#screen-opportunities #opportunity-overview>#deliveries{order:2;}
+#screen-opportunities #opportunity-overview>#deep-analysis{order:0;align-self:flex-start;margin-bottom:14px;}
+#screen-opportunities #deliveries{margin-top:8px;}
+#screen-opportunities #deliveries #task-list{max-height:62vh;overflow:auto;padding-right:4px;}
+#screen-opportunities #company-panel,#screen-opportunities #job-editor{background:#fbfcf9;}
+@media(max-width:760px){.opportunity-layout,.opportunity-layout.list-collapsed{grid-template-columns:1fr;}.opportunity-layout.list-collapsed{grid-template-columns:48px minmax(0,1fr);}#opportunity-list{position:static;max-height:240px;}.compact-session>button{padding:9px 11px;}}
+.task {scroll-margin-top:85px;}
+.onboarding-flow{border-left:5px solid #5b835e;background:#f3f7ef;max-width:860px;margin:0 auto 22px;}
+.onboarding-flow h2{margin:4px 0 10px;color:#284c35}.onboarding-flow>p{line-height:1.75}.onboarding-flow .eyebrow{color:#53745c;font-weight:700;margin-bottom:2px}
+.guide-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.guide-actions button{margin:0}
+.guide-actions button.text-button{color:var(--ui-muted);padding:10px 4px}
+.guide-navigation{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid var(--ui-line,#dce3d9);padding-top:14px;margin-top:18px}
+.guide-navigation button{width:auto!important;font-size:13px!important;padding:8px 10px!important;margin:0}
+.guide-navigation .text-button{color:var(--ui-accent,#315e4b)}
+.guide-role-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}.guide-role-card{margin:0;text-align:left;background:#fff;color:#284c35;border:1px solid #cedbc9}.guide-role-card strong,.guide-role-card small{display:block}.guide-role-card small{font-weight:400;line-height:1.55;margin-top:6px;color:#607363}
+.guide-role-card.selected{border:2px solid #315d43;background:#edf4e8;box-shadow:0 0 0 3px #dce8d6}
+body.first-use-mode>header,body.first-use-mode>footer,body.first-use-mode .workspace-nav{display:none!important}
+body.first-use-mode main{max-width:820px;padding-top:42px}
+body.first-use-mode #notice{max-width:720px;margin:0 auto 16px}
+body.first-use-mode #onboarding-flow{max-width:720px;margin:0 auto 18px;padding:28px 32px;border-left:0;border-top:5px solid #5b835e}
+body.first-use-mode #onboarding-flow h1{font-size:30px;margin:6px 0 12px}
+body.first-use-mode #onboarding-flow .guide-actions button{width:100%;font-size:16px;padding:14px}
+body.first-use-mode #screen-settings>details,body.first-use-mode #screen-profile>details{border:0;box-shadow:none;background:transparent;padding:0;margin:0 auto;max-width:720px}
+body.first-use-mode #screen-settings>details>summary,body.first-use-mode #screen-profile>details>summary{display:none}
+body.first-use-mode #connections .setup-grid,body.first-use-mode #setup .setup-grid{display:block;margin-top:0}
+body.first-use-mode #connections .setup-grid>* ,body.first-use-mode #setup .setup-grid>*{display:none}
+body.first-use-mode[data-guide-step="connection"] #connections .setup-grid>form,
+body.first-use-mode[data-guide-step="pairing"] #connections .setup-grid>#extension-pairing,
+body.first-use-mode[data-guide-step="persona"] #setup .setup-grid>section:nth-child(1),
+body.first-use-mode[data-guide-step="profile"] #setup .setup-grid>section:nth-child(2),
+body.first-use-mode[data-guide-step="privacy"] #setup .setup-grid>section:nth-child(3){display:block}
+body.first-use-mode[data-guide-step="connection"] #test-connection{display:none}
+body.first-use-mode[data-guide-step="pairing"] #extension-revoke{display:none}
+body.first-use-mode #screen-chat>*:not(#onboarding-flow){display:none}
+#extension-pairing{max-width:640px;margin:auto}#extension-pairing li{margin:10px 0}#pair-code{font:600 20px/1.6 monospace;overflow-wrap:anywhere;user-select:all}
+body.first-use-mode[data-guide-step="persona"] #persona-label,
+body.first-use-mode[data-guide-step="persona"] #user-name-label,
+body.first-use-mode[data-guide-step="persona"] #stage-label,
+body.first-use-mode[data-guide-step="profile"] #profile-preferences-label{display:none}
+body.first-use-mode #onboarding-guide,body.first-use-mode #facts-panel,body.first-use-mode #data-panel{display:none!important}
+body.first-use-mode #provider-form,body.first-use-mode #identity-form,body.first-use-mode #profile-form{max-width:640px;margin:0 auto}
+body.first-use-mode #save-provider,body.first-use-mode #save-identity,body.first-use-mode #save-profile,body.first-use-mode #privacy-approve{width:100%;font-size:16px;padding:14px;margin-top:16px}
+@media(max-width:600px){.guide-role-options{grid-template-columns:1fr;}}
+
+/* v0.11: conversation viewport; supporting records live behind explicit entries. */
+body:not(.first-use-mode)>header{height:54px;padding:0 28px}
+body:not(.first-use-mode) main{padding:0 24px 24px;max-width:1280px}
+body:not(.first-use-mode) .workspace-nav{min-height:60px;padding:8px 0;margin-bottom:16px;gap:6px}
+body:not(.first-use-mode) .workspace-nav button{padding:9px 16px}
+body:not(.first-use-mode)[data-workspace-page="chat"]{height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+body:not(.first-use-mode)[data-workspace-page="chat"] main{width:100%;flex:1;min-height:0;display:flex;flex-direction:column;padding-bottom:14px}
+body:not(.first-use-mode)[data-workspace-page="chat"] .workspace-nav{flex-shrink:0;margin-bottom:10px}
+body:not(.first-use-mode)[data-workspace-page="chat"]>footer{display:none}
+body:not(.first-use-mode)[data-workspace-page="chat"] #notice{flex-shrink:0;padding:7px 12px;font-size:12px;max-height:56px;overflow:auto;margin-bottom:8px}
+body:not(.first-use-mode)[data-workspace-page="chat"] #screen-chat{flex:1;min-height:0;width:100%;max-width:940px;display:flex}
+body:not(.first-use-mode) #screen-chat #chat-panel{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;margin:0;padding:16px 22px;background:#fff;border-radius:14px;box-shadow:none}
+body:not(.first-use-mode) #screen-chat #chat-panel>.section-title{flex-shrink:0;gap:10px;border-bottom:1px solid #e5eadf;padding-bottom:12px;margin-bottom:0}
+#chat-title{font-size:15px!important;line-height:1.5;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#chat-panel #job-label{display:none}.chat-tools{display:flex;gap:12px;align-items:center;margin-left:auto;white-space:nowrap}
+body:not(.first-use-mode) #screen-chat #chat-panel #messages{flex:1;min-height:0;max-height:none;overflow:auto;padding:14px 0;overscroll-behavior:contain}
+body:not(.first-use-mode) #chat-form{flex-shrink:0;border-top:1px solid #e1e8db;padding-top:10px}
+body:not(.first-use-mode) #chat-form .task-actions{display:flex;gap:8px;margin:0 0 8px}
+body:not(.first-use-mode) #chat-form .task-actions button{padding:8px 14px;background:#f0f5eb;border:1px solid #e0e8d8;text-align:center;font-size:13px}
+#chat-form>label{font-size:0;margin:0}#chat-form #message{font:14px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;min-height:64px;max-height:110px;margin:0;resize:none}
+#chat-form>#send{margin-top:9px;padding:8px 20px}#chat-form>#rest-wish{background:transparent;color:#617668;padding:8px;font-size:12px}
+#chat-status{margin-top:5px;line-height:1.5;max-height:34px;overflow:auto}
+#session-dialog{width:min(620px,94vw)}#session-dialog>#resume-session{border:0;box-shadow:none;padding:10px 0;margin:0}
+#session-dialog>.text-button{display:block;margin-left:auto;padding:8px}
+#screen-opportunities #opportunity-list .job-list button{padding:10px 12px;font-size:14px;line-height:1.5}
+#screen-opportunities #opportunity-title{font-size:22px;margin-top:0}
+#screen-opportunities #opportunity-overview{display:block}
+#screen-opportunities #deliveries #task-list{max-height:none;overflow:visible;padding:0}
+#screen-opportunities .opportunity-tabs{margin:16px 0;gap:4px;border-bottom:1px solid #dde5d7;padding-bottom:8px}
+#screen-opportunities .opportunity-tabs button{font-size:13px;padding:8px 12px}
+#screen-opportunities .task{border:1px solid #dfe7d8;border-radius:10px;padding:14px;margin:10px 0;background:#fff}
+#screen-opportunities .task>summary{display:list-item;cursor:pointer;font-size:14px}
+#screen-opportunities .task>summary small{display:inline;margin-left:12px;font-size:11px;font-weight:400}
+#screen-opportunities .task[open]>summary{padding-bottom:12px;margin-bottom:8px;border-bottom:1px solid #e9eee3}
+#screen-opportunities .task:not([open]){background:#f8faf5}
+body:not(.first-use-mode) .badge{font-size:11px;border:0;padding:0}
+@media(max-width:760px){body:not(.first-use-mode) main{padding:0 12px 16px}body:not(.first-use-mode)>header{padding:0 16px}.workspace-nav button{font-size:13px}body:not(.first-use-mode) #screen-chat #chat-panel{padding:12px}.chat-tools{gap:8px}.chat-tools button{font-size:11px}#chat-title{max-width:45%}.opportunity-layout{gap:12px}#chat-form .task-actions button{flex:1;padding:8px 4px!important}.task>summary small{display:block!important;margin-left:0!important}}
+@media(max-height:600px){body:not(.first-use-mode)>header{height:42px;flex-shrink:0}body:not(.first-use-mode) .workspace-nav{min-height:45px;padding:4px 0}#chat-status{display:none}}

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>求职搭子侧栏</title><link rel="stylesheet" href="panel.css"><link rel="stylesheet" href="theme.css"></head>
+<body class="sidebar unpaired">
+<header><div class="brand"><span class="buddy-mark" aria-hidden="true">伴</span><h1 id="buddy">求职搭子</h1></div><div class="header-actions"><span id="connection-badge">未连接</span><button id="workbench" class="text-button">工作台</button><button id="open-details" class="icon-button" aria-label="岗位详情与更多功能">⋯</button></div></header>
+<details id="pairing" open><summary>连接我的工作台</summary><p>先连接侧栏，再让搭子陪你看岗位。</p><button id="open-onboarding" type="button">打开工作台，获取配对码</button><label>端口<input id="port" type="number" value="8421" min="1024" max="65535"></label><label>配对码<input id="code" autocomplete="off"></label><button id="connect">连接</button></details>
+<section id="onboarding-card" class="onboarding-card" hidden><small id="onboarding-kicker">首次使用</small><strong id="onboarding-title"></strong><p id="onboarding-copy"></p><button id="onboarding-open" type="button">继续首次设置</button></section>
+<section id="pinned-context"><button id="target-details" class="target-button" aria-label="展开当前对话岗位详情"><strong id="chat-target">还未选定对话岗位</strong><span aria-hidden="true">⌄</span></button></section>
+<section id="candidate-notice" hidden><div><small id="candidate-kicker">读到一个岗位</small><strong id="candidate-title"></strong></div><button id="switch-target" class="secondary">聊这个岗位</button></section>
+<section id="conversation-card" aria-label="和搭子对话">
+<div id="messages" role="log" aria-live="polite"><p class="empty">点开一个感兴趣的岗位，叫我一起看看。</p></div>
+<div id="composer"><div class="actions" aria-label="求职快捷能力"><button data-kind="quick_analysis" title="简短分析当前对话岗位" disabled>分析岗位</button><button data-kind="tailor_resume" title="后台整理，完成后去工作台核对与导出" disabled>优化简历</button><button data-kind="suggest_reply" title="根据岗位和已有对话准备招呼" disabled>HR招呼</button></div>
+<label class="sr-only" for="message">跟搭子说说</label><textarea id="message" rows="2" placeholder="说说你在意什么，HR 的问题也可以贴进来。"></textarea>
+<div class="composer-footer"><span id="composer-hint">Ctrl / ⌘ + Enter 发送</span><button id="send" disabled>发送</button></div><p id="progress" role="status"></p>
+</div></section>
+<p id="status" role="status" aria-live="polite">先到工作台认识你的搭子，再连接侧栏。</p>
+<dialog id="details-dialog" aria-labelledby="details-title"><div class="dialog-heading"><h2 id="details-title">岗位与资料</h2><button id="close-details" class="text-button">收起</button></div><p id="chat-context-note">先选定一个机会，再一起聊。</p>
+<section id="opportunity-card"><small>当前浏览 / 最近读取</small><h2 id="title">点开一个岗位，我们一起看看</h2><p id="company"></p><p id="captured"></p><button id="confirm" disabled>确认这个岗位</button><a id="source" hidden target="_blank" rel="noreferrer">来源岗位 ↗</a></section>
+<details id="company-context" hidden><summary>公司背景</summary><strong id="target-label"></strong><p id="company-reading"></p><button id="save-company" disabled>补充公司背景</button><small id="company-saved">仅保存当前已加载的公司栏目与岗位，不自动翻页。</small></details>
+<details><summary>面试与这一程</summary><p>准备面试、回顾实际进展，或先休息一下。</p><button id="interview-workbench">一起准备面试 / 复盘</button><button id="journey-workbench" class="secondary">看看求职进展</button><button id="blessing" class="secondary">休息 / 结束 · 寄语</button></details>
+<details><summary>岗位读取帮助</summary><button id="rescan" class="secondary">重新识别</button><p>没有读到正文？在独立岗位页选中 JD，再补充岗位和公司。</p><button id="selection-jd">读取选中 JD</button><label>职位<input id="fallback-title"></label><label>公司<input id="fallback-company"></label><label>岗位正文<textarea id="fallback-jd" rows="4"></textarea></label><button id="use-jd">核对并使用</button></details>
+<details><summary>连接与诊断 · v1.0.0-rc.1</summary><button id="disconnect" class="secondary">断开工作台</button><button id="diagnose" class="secondary">生成诊断</button><pre id="diagnostic-output"></pre><button id="copy-diagnostic" class="secondary">复制诊断</button></details>
+</dialog><script src="panel.js"></script></body></html>
