@@ -13,6 +13,7 @@ PERSONAS = {
     "direct": {"title": "直球搭子", "hello": "我是你的 AI 求职搭子。机会一起挑，材料一起改，有疑虑我们直接说清楚。", "prompt": "直接、坦诚、有分寸。先说判断再说理由，不讽刺、不说教，不把资料缺失当能力不足。"},
 }
 DEFAULTS = {"persona": "gentle", "buddy_name": "小伴", "user_name": "", "stage": "应届生", "private_terms": "", "provider": "codex", "base_url": "", "api_model": "", "api_key": "", "json_mode": True, "privacy_approved": "", "onboarded": False,
+            "voice_enabled": True, "voice_base_url": "https://api.openai.com/v1", "voice_api_key": "", "voice_stt_model": "gpt-transcribe", "voice_tts_model": "gpt-4o-mini-tts", "voice_name": "marin", "voice_auto_play": False,
             "guide_connection_ready": False, "guide_persona_ready": False, "guide_job_id": "", "guide_first_task_id": "", "guide_review_task_id": "", "guide_completed": False, "guide_version": ""}
 
 
@@ -31,6 +32,7 @@ class Companion:
         if public:
             value["guide"] = self.onboarding_state(value)
             value["has_api_key"] = bool(value.pop("api_key", ""))
+            value["has_voice_api_key"] = bool(value.pop("voice_api_key", ""))
             value.pop("privacy_approved", None)
             value["personas"] = PERSONAS
         return value
@@ -178,13 +180,18 @@ class Companion:
             if 'base_url' in value and text_field(value['base_url'], '兼容地址', 1000).rstrip('/') != settings['base_url'].rstrip('/'):
                 # A key saved for one endpoint is not silently reused at another.
                 settings['api_key'] = ''
-            for key, limit in (("buddy_name", 24), ("user_name", 40), ("stage", 40), ("private_terms", 6000), ("base_url", 1000), ("api_model", 200), ("api_key", 1000)):
+            if 'voice_base_url' in value and text_field(value['voice_base_url'], '语音服务地址', 1000).rstrip('/') != settings['voice_base_url'].rstrip('/'):
+                settings['voice_api_key'] = ''
+            for key, limit in (("buddy_name", 24), ("user_name", 40), ("stage", 40), ("private_terms", 6000), ("base_url", 1000), ("api_model", 200), ("api_key", 1000),
+                               ("voice_base_url", 1000), ("voice_api_key", 1000), ("voice_stt_model", 200), ("voice_tts_model", 200), ("voice_name", 40)):
                 if key in value:
                     item = text_field(value[key], key, limit)
-                    if key != "api_key" or item:
+                    if key not in ("api_key", "voice_api_key") or item:
                         settings[key] = item
             if value.get("clear_api_key") is True:
                 settings["api_key"] = ""
+            if value.get("clear_voice_api_key") is True:
+                settings["voice_api_key"] = ""
             for key, allowed in (("persona", PERSONAS), ("provider", ("codex", "api"))):
                 if key in value:
                     if value[key] not in allowed:
@@ -196,8 +203,12 @@ class Companion:
                 settings["json_mode"] = value["json_mode"] is True
             if 'stream' in value:settings['stream']=value['stream'] is True
             if 'celebrations' in value:settings['celebrations']=value['celebrations'] is True
+            if 'voice_enabled' in value:settings['voice_enabled']=value['voice_enabled'] is True
+            if 'voice_auto_play' in value:settings['voice_auto_play']=value['voice_auto_play'] is True
             if settings["base_url"]:
                 validate_url(settings["base_url"])
+            if settings["voice_base_url"]:
+                validate_url(settings["voice_base_url"])
             db.execute("INSERT OR REPLACE INTO companion_settings VALUES(1,?)", (json.dumps(settings, ensure_ascii=False),))
         return self.settings(public=True)
 

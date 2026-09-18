@@ -80,7 +80,10 @@ class Journey:
     def export_data(self):
         # Intentionally omit API key and transient bridge credentials.
         data=self.store.state();data['journey']=self.state()
-        with self.store.connect() as db:data['resume_versions']=[dict(r) for r in db.execute('SELECT * FROM resume_versions ORDER BY created')]
+        with self.store.connect() as db:
+            data['resume_versions']=[dict(r) for r in db.execute('SELECT * FROM resume_versions ORDER BY created')]
+            data['interview_sessions']=[dict(r) for r in db.execute('SELECT id,job_id,resume_version_id,status,stage,goal,recap_json,created,updated,ended FROM interview_sessions ORDER BY created')]
+            data['interview_turns']=[dict(r) for r in db.execute('SELECT id,session_id,turn_no,stage,question,answer_status,answer_text,created,answered FROM interview_turns ORDER BY session_id,turn_no')]
         return json.dumps(data,ensure_ascii=False,indent=2).encode()
 
     def erase(self,value):
@@ -95,7 +98,7 @@ class Journey:
             db.execute('PRAGMA secure_delete=ON')
             db.execute('BEGIN IMMEDIATE')
             if db.execute("SELECT 1 FROM tasks WHERE status IN ('running','queued')").fetchone():raise Problem('先等待或取消所有任务，再删除资料',409)
-            for table in ('result_views','messages','resume_versions','career_events','profile_facts','tasks','documents','events','job_companies','company_evidence','companies','saved_targets','jobs'):
+            for table in ('interview_turns','interview_sessions','result_views','messages','resume_versions','career_events','profile_facts','tasks','documents','events','job_companies','company_evidence','companies','saved_targets','jobs'):
                 db.execute('DELETE FROM '+table)
             if db.execute("SELECT 1 FROM sqlite_master WHERE name='browser_captures'").fetchone():db.execute('DELETE FROM browser_captures')
             db.execute("UPDATE profile SET name='',preferences='',facts='',revision=revision+1 WHERE id=1")

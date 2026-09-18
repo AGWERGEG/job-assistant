@@ -11,7 +11,7 @@ function harness(hash='',ready=true,fixture={}){
  const data={profile:{name:'测试',preferences:'',facts:'经历'},jobs:[{id:'a',title:'岗位A',company:'公司A'},{id:'b',title:'岗位B',company:'公司B'}],tasks:[{id:'resume-a',kind:'tailor_resume',job_id:'a',status:'done',created:1,result:{primary_output:'A的简历',markdown:'说明'}},{id:'interview-b',kind:'interview_prep',job_id:'b',status:'done',created:2,result:{primary_output:'B的面试卡',markdown:'说明'}}],...(fixture.data||{})};
  const controls={calls:[],data,errors,company:fixture.company||null};w.setInterval=fn=>{controls.refresh=fn;return 1;};
  w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'));};
- const settings={ready,persona:'gentle',buddy_name:'小伴',personas:{gentle:{hello:'你好'},direct:{hello:'直接说判断。'}},provider:'api',...(fixture.settings||{})};
+ const settings={ready,persona:'gentle',buddy_name:'小伴',personas:{gentle:{hello:'你好'},direct:{hello:'直接说判断。'}},provider:'api',voice_enabled:true,voice_base_url:'https://api.openai.com/v1',voice_stt_model:'gpt-transcribe',voice_tts_model:'gpt-4o-mini-tts',voice_name:'marin',voice_cloud_ready:false,voice_local_stt_ready:false,...(fixture.settings||{})};
  controls.settings=settings;controls.connectionOK=true;
  w.fetch=async(url,init)=>{const value=init?.body?JSON.parse(init.body):null;controls.calls.push([url,value]);let r={};
   if(url==='/api/session')r={token:'local-test',version:'0.10.0',execution:'codex-worker'};
@@ -37,6 +37,19 @@ test('returning user lands in chat, setup/settings hidden, no duplicate IDs',asy
  assert.equal(w.document.getElementById('screen-profile').hidden,true);assert.equal(w.document.getElementById('screen-settings').hidden,true);
  const ids=[...w.document.querySelectorAll('[id]')].map(n=>n.id);assert.equal(new Set(ids).size,ids.length);
  assert.equal(w.document.getElementById('chat-panel').closest('#screen-chat').id,'screen-chat');dom.window.close();
+});
+test('cloud voice controls disclose privacy and keep text as the confirmed input',async()=>{
+ const {w,dom,controls}=harness('#job=a');await settle();
+ assert.match(w.document.getElementById('voice-settings').textContent,/原始音频默认不保存/);
+ assert.match(w.document.getElementById('voice-settings').textContent,/AI 合成声音/);
+ assert.equal(w.document.getElementById('voice-record').type,'button');
+ assert.equal(w.document.getElementById('interview-voice-record').type,'button');
+ w.document.querySelector('[data-page="settings"]').click();
+ w.document.getElementById('voice-api-key').value='synthetic-voice-key';
+ w.document.getElementById('provider-form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await settle();
+ const saved=controls.calls.find(c=>c[0]==='/api/companion'&&c[1]?.voice_stt_model)[1];
+ assert.equal(saved.voice_stt_model,'gpt-transcribe');assert.equal(saved.voice_tts_model,'gpt-4o-mini-tts');assert.equal(saved.voice_api_key,'synthetic-voice-key');
+ assert.equal(controls.calls.some(c=>c[0]==='/api/talk'),false);dom.window.close();
 });
 test('read acknowledgement changes inbox but not career progress; read results stay accessible',async()=>{
  const {w,dom,controls}=harness('#job=a&task=resume-a');await settle();

@@ -7,10 +7,12 @@ import uuid
 from contextlib import contextmanager
 from pathlib import Path
 
-TASK_KINDS = {"analyze_job", "tailor_resume", "suggest_reply", "companion_chat", "quick_analysis", "interview_prep", "interview_review", "rest_message", "closing_message"}
+TASK_KINDS = {"analyze_job", "tailor_resume", "suggest_reply", "companion_chat", "quick_analysis", "interview_prep", "interview_review", "interview_question", "interview_recap", "rest_message", "closing_message"}
 
 
 def task_lane(kind):
+    if kind in ('interview_question', 'interview_recap'):
+        return 'interview'
     return 'background' if kind in ('analyze_job', 'tailor_resume', 'interview_prep', 'interview_review') else 'chat'
 
 
@@ -87,7 +89,9 @@ class Store:
             db.execute("UPDATE meta SET value='5' WHERE key='schema_version'")
             from .company import init_tables
             init_tables(db)
-            db.execute("UPDATE meta SET value='9' WHERE key='schema_version'")
+            from .interviews import init_tables as init_interview_tables
+            init_interview_tables(db)
+            db.execute("UPDATE meta SET value='10' WHERE key='schema_version'")
         try:
             os.chmod(self.db, 0o600)
         except OSError:
@@ -181,7 +185,7 @@ class Store:
                 raise Problem("任务不存在", 404)
             return self.decode_task(row)
 
-    def create_task(self, value, bridge=None, conversation_override=None):
+    def create_task(self, value, bridge=None, conversation_override=None, extra_context=None):
         require_object(value)
         kind, job_id = value.get("kind"), value.get("job_id")
         if kind not in TASK_KINDS or not isinstance(job_id, str):
@@ -257,6 +261,8 @@ class Store:
                 "instruction": text_field(value.get("instruction", ""), "instruction", 5000),
                 "prior_results": prior,
             }
+            if extra_context:
+                context.update(extra_context)
             context['confirmed_facts']=[dict(r) for r in db.execute('SELECT id,category,content,source FROM profile_facts ORDER BY created DESC LIMIT 80')]
             if kind == 'closing_message':
                 from .closing import closing_snapshot

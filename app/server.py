@@ -26,9 +26,13 @@ def make_server(directory, port=8421, worker_enabled=False, worker_count=None):
     companion = Companion(store)
     journey=Journey(store)
     activity=Activity(store)
+    from .interviews import Interviews
+    interviews=Interviews(store, companion)
 
     def workbench_settings():
         public = {**companion.settings(public=True), "ready": companion.ready(), **bridge.pairing_state()}
+        from .voice import status as voice_status
+        public.update(voice_status(companion.settings()))
         guide = public['guide']
         if guide['active'] and not public['extension_paired']:
             public['guide'] = {**guide, 'step': 'pairing'}
@@ -52,7 +56,7 @@ def make_server(directory, port=8421, worker_enabled=False, worker_count=None):
             if urlparse(self.path).path.startswith("/bridge/") and EXTENSION_ORIGIN.fullmatch(origin):
                 self.send_header("Access-Control-Allow-Origin", origin)
                 self.send_header("Vary", "Origin")
-            self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'; base-uri 'none'")
+            self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; media-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'none'")
             self.end_headers()
             self.wfile.write(body)
 
@@ -97,9 +101,9 @@ def make_server(directory, port=8421, worker_enabled=False, worker_count=None):
                     return self.send(200, workbench_settings())
                 if path == "/api/session":
                     bundled = Path("/Applications/ChatGPT.app/Contents/Resources/codex")
-                    return self.send(200, {"token": token, "version": "1.0.0-rc.1", "execution": "codex-worker" if worker_enabled else "manual-agent-bridge", "worker_available": bool(shutil.which("codex") or bundled.is_file()), "data_dir": str(store.directory), "project_dir": str(WEB.parent)})
+                    return self.send(200, {"token": token, "version": "2.0.0-dev.1", "execution": "codex-worker" if worker_enabled else "manual-agent-bridge", "worker_available": bool(shutil.which("codex") or bundled.is_file()), "data_dir": str(store.directory), "project_dir": str(WEB.parent)})
                 if path == "/api/health":
-                    return self.send(200, {"ok": True, "version": "1.0.0-rc.1", "worker_enabled": worker_enabled})
+                    return self.send(200, {"ok": True, "version": "2.0.0-dev.1", "worker_enabled": worker_enabled})
                 if path=='/api/journey':return self.send(200,journey.state())
                 if path=='/api/data-export':return self.send(200,journey.export_data(),'application/json; charset=utf-8')
                 if path.startswith('/api/resume-export/'):
@@ -140,13 +144,21 @@ def make_server(directory, port=8421, worker_enabled=False, worker_count=None):
                     size = int(self.headers.get("Content-Length", "0"))
                 except ValueError:
                     raise Problem("Content-Length 无效")
-                if size <= 0 or size > LIMIT:
-                    raise Problem("请求体大小无效，最大 8 MB", 413)
+                path = urlparse(self.path).path
+                request_limit = 12 * 1024 * 1024 if path == '/api/voice/transcribe' else LIMIT
+                if size <= 0 or size > request_limit:
+                    raise Problem("请求体大小无效，录音最大 8 MB，其他请求最大 8 MB", 413)
                 try:
                     value = require_object(json.loads(self.rfile.read(size)))
                 except (json.JSONDecodeError, UnicodeDecodeError):
                     raise Problem("JSON 无效")
-                path = urlparse(self.path).path
+                if path == '/api/voice/transcribe':
+                    from .voice import transcribe
+                    return self.send(200, transcribe(companion.settings(), value))
+                if path == '/api/voice/speech':
+                    from .voice import speech
+                    data, mime = speech(companion.settings(), value)
+                    return self.send(200, data, mime)
                 if path == '/api/resume-export-preview':
                     from .resume_restore import preview_resume
                     return self.send(200, preview_resume(store, value.get('version_id', '')))
@@ -175,7 +187,7 @@ def make_server(directory, port=8421, worker_enabled=False, worker_count=None):
                             ready = bool(db.execute("SELECT facts FROM profile WHERE id=1").fetchone()[0].strip())
                         settings = companion.settings()
                         public = companion.settings(public=True)
-                        response = {"version": "1.0.0-rc.1", "profile_ready": ready, "worker_enabled": worker_enabled, "ready": companion.ready(), "buddy_name": settings['buddy_name'], "persona": settings['persona'], "guide": public['guide']}
+                        response = {"version": "2.0.0-dev.1", "profile_ready": ready, "worker_enabled": worker_enabled, "ready": companion.ready(), "buddy_name": settings['buddy_name'], "persona": settings['persona'], "guide": public['guide']}
                     elif path == "/bridge/onboarding-complete":
                         response = companion.onboarding_action({"action": "complete"})
                     elif path == "/bridge/disconnect":
@@ -202,6 +214,11 @@ def make_server(directory, port=8421, worker_enabled=False, worker_count=None):
                     return self.send(200, workbench_settings())
                 if path == '/api/talk':
                     return self.send(200, companion.send(value))
+                if path == '/api/interviews/start':return self.send(200,interviews.start(value))
+                if path == '/api/interviews/list':return self.send(200,interviews.list(value.get('job_id','')))
+                if path == '/api/interviews/get':return self.send(200,interviews.get(value.get('session_id','')))
+                if path == '/api/interviews/answer':return self.send(200,interviews.answer(value))
+                if path == '/api/interviews/control':return self.send(200,interviews.control(value))
                 if path == '/api/history':
                     return self.send(200, companion.history(value.get('job_id', '')))
                 if path=='/api/journey-event':return self.send(200,journey.event(value))
@@ -257,11 +274,13 @@ def make_server(directory, port=8421, worker_enabled=False, worker_count=None):
             count = int(worker_count if worker_count is not None else os.environ.get("JOB_ASSISTANT_WORKERS", "2"))
         except ValueError:
             count = 2
-        # Reserve a chat slot: long resume tasks cannot occupy every worker.
-        count = max(2, min(count, 4))
+        # Reserve chat and interview slots so long resume tasks cannot occupy
+        # voice conversation turns. Extra workers handle background tasks.
+        count = max(3, min(count, 4))
         threads = []
         for index in range(count):
-            worker = CodexWorker(store, WEB.parent, lane='chat' if index == 0 else 'background')
+            lane = 'chat' if index == 0 else 'interview' if index == 1 else 'background'
+            worker = CodexWorker(store, WEB.parent, lane=lane)
             thread = threading.Thread(target=worker.run_forever, args=(stop,), daemon=True,
                                       name=f"codex-worker-{index + 1}")
             thread.start()

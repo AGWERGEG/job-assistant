@@ -16,6 +16,8 @@ dialog::backdrop {background:#15332680;}
 .export-actions {display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
 #moment-text {white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.9;}
 #interview-panel small {display:block;margin-top:12px;}
+.voice-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 12px}.voice-bar button{margin:0}.voice-bar span{font-size:12px;color:#68786c}.voice-bar .recording{background:#9b443b;color:#fff}button.speak{margin-left:8px}.voice-fallback{color:#8a6432!important}#voice-settings{margin-top:18px;padding-top:12px;border-top:1px solid #e2e8dd}
+#mock-interview-start,#mock-interview-session{border:1px solid #dde6d8;border-radius:12px;padding:16px;margin:14px 0;background:#fafcf8}.mock-actions{display:flex;gap:8px;flex-wrap:wrap}.mock-actions button{margin:0}#mock-interview-question{font-size:16px;line-height:1.8;background:#eef4e9;padding:16px;border-radius:10px}#mock-interview-history article{border-top:1px solid #e5ebe1;padding:12px 0}#mock-interview-history p{white-space:pre-wrap}#mock-interview-recap pre{white-space:pre-wrap;font:inherit;line-height:1.8;background:#f2f5ee;padding:14px;border-radius:10px}
 [hidden] {display:none!important;}
 .workspace-nav,.opportunity-tabs {display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
 .workspace-nav {position:sticky;top:0;z-index:5;background:#f3f5ef;padding:12px 0;border-bottom:1px solid #dfe5db;}

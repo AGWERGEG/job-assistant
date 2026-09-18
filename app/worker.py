@@ -94,6 +94,20 @@ TASKS['interview_review'] = '''完成“面试后复盘”。instruction是用�
 - questions：最多两个必要澄清问题。
 - markdown：简述依据与不能确认的结论。不自动写入个人事实档案、不记录面试完成或录用状态。'''
 
+TASKS['interview_question'] = '''你是岗位模拟面试官。interview_session 包含当前阶段、用户选择的已验收简历，以及本次模拟中已经出现的问题和用户确认后的回答。
+严格事实边界：历史 AI 草稿不是个人事实；只有 profile、confirmed_facts、selected_resume 和用户确认回答中的明确内容可作为候选人经历。不得补写数字、工具、职责、协作对象或成果。
+- 每轮只输出一个面试问题，primary_output 只能放问题本身，不附答案、提示、评价或第二个问题。
+- 问题必须符合当前 stage：自我介绍、经历追问、岗位专项、压力澄清或用户反问。
+- 可以针对用户上一轮确认回答中的含糊处追问，但不能根据语气、停顿或时长评价表现。
+- 避免重复已经问过的问题；资料不足时问澄清问题，不假设经历存在。
+- decision 写本题考察点，strategy 写下一轮可能方向，questions 为空，markdown 简述问题依据及使用的明确事实。'''
+
+TASKS['interview_recap'] = '''完成一轮模拟面试复盘。只分析 interview_session.turns 中 answer_status=confirmed 的用户回答；skipped 或未确认内容不是回答。历史 AI 草稿不作为个人事实。
+- 不预测录用、拒绝或成功率，不根据回答时长、语气、停顿推断能力。
+- primary_output 用四个短标题：已确认表现、最值得保留、最需要改进、下一次练习。指出具体回答片段的表达问题，但不得补编更漂亮的事实。
+- 缺失的数字、工具、职责、成果列为待补充，不替用户生成。
+- decision 是下一次最优先练习点；strategy 是继续沿用的真实卖点；questions 最多两个必要澄清；markdown 说明事实来源和不能确认的结论。'''
+
 
 def prompt_for(task, settings=None):
     settings = settings or {}
