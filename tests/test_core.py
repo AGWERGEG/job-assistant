@@ -101,7 +101,7 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(self.store.get_task(failed_task["id"])["status"], "failed")
 
     @unittest.skipIf(os.name == "nt", "fake executable is POSIX-only")
-    def test_worker_uses_fast_model_and_low_reasoning_by_default(self):
+    def test_worker_uses_cli_default_model_and_low_reasoning(self):
         from app.worker import CodexWorker
         self.task()
         fake = Path(self.tmp.name) / "fake-codex-args"
@@ -120,7 +120,7 @@ printf '%s' '{{"mode":"agent","producer":"fake","summary":"完成","decision":"�
         fake.chmod(0o755)
         self.assertTrue(CodexWorker(self.store, self.tmp.name, codex_bin=str(fake)).run_one())
         args = args_file.read_text()
-        self.assertIn("gpt-5.6-luna", args)
+        self.assertNotIn("\n-m\n", '\n' + args)
         self.assertIn('model_reasoning_effort="low"', args)
 
     def test_import_does_not_overwrite_profile_and_blocks_path(self):
@@ -187,7 +187,7 @@ printf '%s' '{{"mode":"agent","producer":"fake","summary":"完成","decision":"�
                 headers["Content-Type"] = "application/json"
             req = urllib.request.Request(base + path, data=json.dumps(value).encode() if value is not None else None, headers=headers)
             return urllib.request.urlopen(req)
-        token = json.load(request("/api/session"))["token"]
+        token = server.session_token
         for headers in ({}, {"X-Local-Token": token, "Origin": "https://evil.example"}, {"X-Local-Token": token, "Host": "evil.example"}):
             with self.assertRaises(urllib.error.HTTPError) as cm:
                 request("/api/profile", {"facts": "x"}, **headers)
@@ -197,10 +197,108 @@ printf '%s' '{{"mode":"agent","producer":"fake","summary":"完成","decision":"�
         self.assertEqual(cm.exception.code, 400)
         task = self.store.claim(self.task()["id"])
         self.store.finish(task["id"], task["claim_token"], self.result())
-        self.assertIn("证据", request("/api/export/"+task["id"]).read().decode())
+        self.assertIn("证据", request("/api/export/"+task["id"], **{"X-Local-Token":token}).read().decode())
         with self.assertRaises(urllib.error.HTTPError):
             request("/../data/assistant.sqlite3")
         self.assertIn("求职搭子", request("/").read().decode())
+
+    def test_cross_site_document_navigation_only_opens_public_shell(self):
+        server = make_server(self.tmp.name, 0)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        base = f"http://127.0.0.1:{server.server_port}"
+
+        def request(path, **headers):
+            req = urllib.request.Request(base + path, headers=headers)
+            return urllib.request.urlopen(req)
+
+        shell = request(
+            "/", Origin="https://evil.example", **{
+                "Sec-Fetch-Site": "cross-site",
+                "Sec-Fetch-Mode": "navigate",
+                "Sec-Fetch-Dest": "document",
+            }
+        )
+        self.assertEqual(shell.status, 200)
+        self.assertIn("求职搭子", shell.read().decode())
+        self.assertIn("frame-ancestors 'none'", shell.headers["Content-Security-Policy"])
+
+        same_origin = {"Origin": base, "Sec-Fetch-Site": "same-origin", "X-Local-Token":server.session_token}
+        for path in ("/", "/api/session", "/api/state", "/api/data-export"):
+            with self.subTest(path=path):
+                self.assertEqual(request(path, **same_origin).status, 200)
+
+    def test_cross_site_apis_and_posts_reject_spoofed_document_navigation(self):
+        server = make_server(self.tmp.name, 0)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        base = f"http://127.0.0.1:{server.server_port}"
+        navigation = {
+            "Origin": "https://evil.example",
+            "Sec-Fetch-Site": "cross-site",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Dest": "document",
+        }
+
+        for path in ("/api/session", "/api/state", "/api/data-export"):
+            with self.subTest(method="GET", path=path):
+                req = urllib.request.Request(base + path, headers=navigation)
+                with self.assertRaises(urllib.error.HTTPError) as cm:
+                    urllib.request.urlopen(req)
+                self.assertEqual(cm.exception.code, 403)
+
+        for path in ("/", "/api/profile"):
+            with self.subTest(method="POST", path=path):
+                req = urllib.request.Request(
+                    base + path,
+                    data=b'{"facts":"cross-site"}',
+                    headers={**navigation, "Content-Type": "application/json"},
+                    method="POST",
+                )
+                with self.assertRaises(urllib.error.HTTPError) as cm:
+                    urllib.request.urlopen(req)
+                self.assertEqual(cm.exception.code, 403)
+
+    def test_cross_site_root_requires_document_navigation_and_known_host(self):
+        server = make_server(self.tmp.name, 0)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        base = f"http://127.0.0.1:{server.server_port}"
+        invalid_navigation = (
+            ("navigate", "iframe"),
+            ("cors", "empty"),
+            ("no-cors", "script"),
+            ("navigate", "empty"),
+        )
+
+        for mode, destination in invalid_navigation:
+            with self.subTest(mode=mode, destination=destination):
+                req = urllib.request.Request(base + "/", headers={
+                    "Origin": "https://evil.example",
+                    "Sec-Fetch-Site": "cross-site",
+                    "Sec-Fetch-Mode": mode,
+                    "Sec-Fetch-Dest": destination,
+                })
+                with self.assertRaises(urllib.error.HTTPError) as cm:
+                    urllib.request.urlopen(req)
+                self.assertEqual(cm.exception.code, 403)
+
+        req = urllib.request.Request(base + "/", headers={
+            "Host": "evil.example",
+            "Origin": "https://evil.example",
+            "Sec-Fetch-Site": "cross-site",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Dest": "document",
+        })
+        with self.assertRaises(urllib.error.HTTPError) as cm:
+            urllib.request.urlopen(req)
+        self.assertEqual(cm.exception.code, 403)
 
 
 if __name__ == "__main__":

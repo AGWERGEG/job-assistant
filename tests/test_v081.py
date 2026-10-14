@@ -38,7 +38,7 @@ class FixTests(unittest.TestCase):
                 started.set();release.wait(4)
                 return json.dumps({'mode':'agent','producer':'mock','summary':'完成','primary_output':'活动协调','markdown':'依据'})
             return '我们可以继续聊。'
-        with patch('app.worker.api_complete',side_effect=mock):
+        with patch('app.worker.api_complete',side_effect=mock), patch('app.worker.run_dialogue', return_value={'reply':'我们可以继续聊。','usage':{'requests':1},'tool_calls':[], 'review':{'performed':False,'issues':[],'revised':False}}):
             thread=threading.Thread(target=CodexWorker(self.s,Path.cwd(),lane='background').run_one)
             thread.start();self.assertTrue(started.wait(2))
             c=self.send('companion_chat','chat')

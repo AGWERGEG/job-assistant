@@ -50,6 +50,13 @@ dialog::backdrop{background:#233f3547}
 .turn p{font-size:14px;line-height:1.85}
 .turn .user,.turn .user-message{background:var(--ui-tint);color:var(--ui-ink);border-radius:13px 13px 4px 13px;border:1px solid #dce8da}
 .turn .reply,.turn .buddy-message{color:var(--ui-ink)}
+.turn .reply-format{white-space:normal;overflow-wrap:anywhere;line-height:1.7;min-width:0}
+.turn .reply-format p,.turn .reply-format h3,.turn .reply-format h4,.turn .reply-format h5{white-space:normal;overflow-wrap:anywhere;line-height:1.7;margin:0 0 .55em}
+.turn .reply-format>:last-child{margin-bottom:0}
+.turn .reply-format h3,.turn .reply-format h4,.turn .reply-format h5{font-size:14px;font-weight:650;margin-top:.8em}
+.turn .reply-format ul,.turn .reply-format ol{margin:.35em 0 .7em;padding-left:1.5em}
+.turn .reply-format li{margin:.2em 0;overflow-wrap:anywhere}
+.turn .reply-format code{font:inherit;background:var(--ui-soft);padding:0 .2em;border-radius:3px}
 .turn button{background:transparent;color:var(--ui-accent);border:1px solid var(--ui-line);font-weight:500}
 .turn button:hover:not(:disabled){background:var(--ui-soft);border-color:var(--ui-line-strong)}
 .turn small{font-size:11px;color:var(--ui-muted)}
@@ -128,8 +135,19 @@ dialog::backdrop{background:#233f3547}
 .sidebar #status.error{background:var(--ui-error-bg);color:var(--ui-error);border-left:3px solid var(--ui-error)}
 .sidebar .dialog-heading{background:var(--ui-surface)}
 .sidebar dialog section,.sidebar dialog details{border-color:var(--ui-line)}
-.sidebar #pairing{border-radius:var(--ui-radius-panel);border-color:var(--ui-line);background:var(--ui-surface)}
+.sidebar #pairing{border-radius:var(--ui-radius-panel);border:1px solid var(--ui-line);background:var(--ui-surface);padding:16px;display:grid;gap:10px}
+.sidebar #pairing strong{font-size:18px}.sidebar #pairing p{margin:0}.sidebar #manual-pairing{margin-top:4px}.sidebar #manual-pairing label{display:block;margin:10px 0}
 .sidebar .onboarding-card{border:1px solid var(--ui-line-strong);background:var(--ui-tint);border-radius:12px}
+.sidebar .readiness-card{border:1px solid var(--ui-line-strong);border-left:3px solid var(--ui-accent);background:var(--ui-surface);border-radius:12px;padding:12px;flex-shrink:0}.sidebar .readiness-card small{display:block;color:var(--ui-accent);margin-bottom:2px}.sidebar .readiness-card strong{display:block;font-size:15px}.sidebar .readiness-card p{font-size:12px;line-height:1.65;margin:6px 0 10px}.sidebar .readiness-card button{width:100%}
 .sidebar #disconnect{background:var(--ui-error-bg);color:var(--ui-error);border-color:#e7c6c0}
 @media(max-width:340px){.sidebar #connection-badge{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+.sidebar .command-menu button{color:var(--ui-accent)!important;background:var(--ui-soft)!important}
+.turn-result{margin:8px 0;padding:8px 10px;border:1px solid var(--ui-line);border-radius:8px;background:var(--ui-soft)}.turn-result summary{cursor:pointer;color:var(--ui-accent);font-weight:600}.turn-result .reply-format{white-space:normal;overflow-wrap:anywhere;line-height:1.7}.turn-result .reply-format p,.turn-result .reply-format h3,.turn-result .reply-format h4,.turn-result .reply-format h5{white-space:normal;overflow-wrap:anywhere;margin:0 0 .55em}.turn-result .reply-format ul,.turn-result .reply-format ol{padding-left:1.4em}
+
+/* Shared card and action hierarchy for the sidebar. */
+.sidebar .artifact-card,.sidebar .turn-result{box-shadow:none;background:var(--ui-surface);border-color:var(--ui-line)}
+.sidebar .artifact-card button,.sidebar .turn-result button{font-size:11px;padding:5px 8px}
+.sidebar .turn button.secondary{background:var(--ui-soft)}
+.sidebar .turn{border-bottom-color:var(--ui-line)}

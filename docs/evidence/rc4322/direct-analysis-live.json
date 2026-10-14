@@ -1,0 +1,192 @@
+{
+  "version": "1.0.0-rc.4.3.21",
+  "fixture_only": true,
+  "production_user_data_modified": false,
+  "model": "deepseek-v4-pro",
+  "endpoint": "https://api.deepseek.com",
+  "turns": [
+    {
+      "case": "offer",
+      "input": "这个岗位和我相关吗？先聊聊，不要生成报告。",
+      "kind": "companion_chat",
+      "status": "done",
+      "reply": "这个岗位和你“希望在杭州发展、重视学习空间”的偏好有一定关联，但“相关”到什么程度，还需要对齐几个信息才好说。\n\n目前我这边有你的求职目标记录，是“区域销售经理（云帆科技）”。如果你想，我们可以从这几个角度聊：\n\n- 你现在看中的是这个销售管理岗，还是别的方向？\n- 你更在意工作内容接近、行业匹配，还是成长空间、城市这些？\n- 你手头有没有具体的岗位信息想让我参考？\n\n你先说说你关心的点，我们慢慢聊，不急着下结论。",
+      "error": null,
+      "metrics": {
+        "queue_seconds": 0.003,
+        "provider": "api",
+        "phase": "done",
+        "attempt": 1,
+        "attempt_started": 1790661613.426378,
+        "prompt_chars": 1214,
+        "response_mode": "reviewed",
+        "structured": false,
+        "json_mode": false,
+        "first_response_seconds": 4.192,
+        "dialogue_agent": true,
+        "requests": 1,
+        "input_tokens": 888,
+        "output_tokens": 120,
+        "tool_calls": [],
+        "review": {
+          "performed": false,
+          "issues": [],
+          "revised": false
+        },
+        "recovered_receipt": false,
+        "model_seconds": 4.201,
+        "attempt_seconds": 4.201,
+        "total_seconds": 4.204
+      },
+      "seconds": 4.205
+    },
+    {
+      "case": "analysis",
+      "input": "帮我分析一下吧",
+      "kind": "companion_chat",
+      "status": "done",
+      "reply": "已创建后台分析任务，目前排队中，尚未生成报告。你可以继续聊天。",
+      "error": null,
+      "metrics": {
+        "queue_seconds": 0.004,
+        "provider": "api",
+        "phase": "done",
+        "attempt": 1,
+        "attempt_started": 1790661617.637814,
+        "prompt_chars": 1751,
+        "response_mode": "reviewed",
+        "structured": false,
+        "json_mode": false,
+        "first_response_seconds": 4.118,
+        "dialogue_agent": true,
+        "requests": 2,
+        "input_tokens": 2162,
+        "output_tokens": 144,
+        "tool_calls": [
+          "create_analysis_task"
+        ],
+        "review": {
+          "performed": false,
+          "issues": [],
+          "revised": false
+        },
+        "recovered_receipt": false,
+        "model_seconds": 4.127,
+        "attempt_seconds": 4.127,
+        "total_seconds": 4.131
+      },
+      "seconds": 4.132
+    },
+    {
+      "case": "quote",
+      "input": "HR说“帮我分析一下吧”，我只是转述，不是让你做。",
+      "kind": "companion_chat",
+      "status": "done",
+      "reply": "明白，谢谢你说明——这句话是转述，我不会按它去创建或继续任务。\n\n刚才那个分析已经进到队列里了（如果你不想要，可以在任务列表里用取消按钮取消）。接下来想聊什么，你说。",
+      "error": null,
+      "metrics": {
+        "queue_seconds": 0.005,
+        "provider": "api",
+        "phase": "done",
+        "attempt": 1,
+        "attempt_started": 1790661621.776957,
+        "prompt_chars": 1678,
+        "response_mode": "reviewed",
+        "structured": false,
+        "json_mode": false,
+        "first_response_seconds": 3.206,
+        "dialogue_agent": true,
+        "requests": 1,
+        "input_tokens": 1122,
+        "output_tokens": 49,
+        "tool_calls": [],
+        "review": {
+          "performed": false,
+          "issues": [],
+          "revised": false
+        },
+        "recovered_receipt": false,
+        "model_seconds": 3.215,
+        "attempt_seconds": 3.215,
+        "total_seconds": 3.22
+      },
+      "seconds": 3.221
+    },
+    {
+      "case": "negation",
+      "input": "先不要分析，也不要生成报告，我只想聊聊。",
+      "kind": "companion_chat",
+      "status": "done",
+      "reply": "好，只聊，不动分析、不出报告。\n\n你想从哪儿聊起？比如这个岗位和你现在方向的匹配度、杭州的机会，还是别的顾虑，都可以说。",
+      "error": null,
+      "metrics": {
+        "queue_seconds": 0.005,
+        "provider": "api",
+        "phase": "done",
+        "attempt": 1,
+        "attempt_started": 1790661625.005549,
+        "prompt_chars": 1865,
+        "response_mode": "reviewed",
+        "structured": false,
+        "json_mode": false,
+        "first_response_seconds": 2.416,
+        "dialogue_agent": true,
+        "requests": 1,
+        "input_tokens": 1187,
+        "output_tokens": 36,
+        "tool_calls": [],
+        "review": {
+          "performed": false,
+          "issues": [],
+          "revised": false
+        },
+        "recovered_receipt": false,
+        "model_seconds": 2.426,
+        "attempt_seconds": 2.426,
+        "total_seconds": 2.432
+      },
+      "seconds": 2.433
+    }
+  ],
+  "analysis_count": 1,
+  "background": {
+    "status": "done",
+    "source_task_id": "54dfd51952114ab8aae3641cd3729671",
+    "instruction": "帮我分析一下吧",
+    "result": {
+      "summary": "该岗位与你的软件销售背景有一定匹配，但安全行业和渠道拓展经验缺失，建议先沟通确认岗位重心后再决定是否投递。",
+      "markdown": "### 岗位真实重心\n该岗位核心是开拓浙江区域企业安全软件市场，既直接面向企业客户销售，也要发展并管理渠道伙伴，日常重心包括需求沟通、方案推进、渠道拓展和回款管理。关键结果是区域销售额、回款率和渠道伙伴数量/质量。JD中“企业客户销售经验”属于较强偏好，基本可视为准入门槛；“安全行业经验优先”是加分项，非必须。\n\n### 你的竞争点\n- 已有两年软件行业客户销售经验，从事过需求沟通和老客户维护，说明具备企业销售的基础沟通能力和客户关系维护意识。\n- 协助制作产品演示，体现对产品讲解和销售支持环节的参与，可转化为“能快速学习新产品并辅助技术交流”的卖点。\n- 希望在杭州发展，与区域岗位地点匹配。\n\n### 关键差距\n- 安全行业知识：未提供相关经历，属于偏好项，但可能影响客户信任建立，需评估学习速度。\n- 渠道伙伴拓展：JD明确包含渠道拓展，材料未提供任何渠道销售或伙伴合作经历，若渠道是核心指标，这是明显短板。\n- 新客户开发：现有事实偏老客户维护，缺少主动开拓新客户的直接证据，而区域销售经理通常需要承担新客户指标。\n- 回款管理：未提供，可能隐含在销售职责中，但不明确。\n\n### 建议动作\n1. 先低成本沟通：通过查看公司官网、招聘详情或与HR/用人经理简短交流，确认渠道拓展在岗位中的权重、团队支持情况、安全行业经验是否强制。\n2. 准备2-3个销售案例：重点突出需求挖掘、方案沟通、客户维护中的具体动作和结果（避免虚假数字）。\n3. 如果渠道拓展被证实是核心，需要重新评估该岗位的优先级；若渠道只是辅助，可以优先尝试，突出软件销售迁移能力。",
+      "producer": "兼容 API",
+      "mode": "agent",
+      "decision": "低成本沟通后再决定",
+      "strategy": "建议以“有软件销售经验、能快速学习安全产品”为定位，重点呈现两年客户销售中的需求沟通和老客户维护实例，以及协助产品演示的参与度。最强证据是软件行业销售背景，最大风险是安全行业认知和渠道拓展经历未提供。若渠道拓展是核心KPI，则匹配度下降，需谨慎。",
+      "primary_output": "这个岗位本质上是把企业安全软件卖给浙江的企业，同时通过渠道伙伴扩大覆盖，日常重心是客户沟通、渠道拓展和回款。你有两年软件客户销售经验，做过需求沟通、老客户维护和产品演示支持，这在客户沟通和软件销售上是直接相关；但安全行业认知和渠道拓展经历目前没有体现，这是两个需要确认的缺口。建议先低成本了解岗位中渠道开拓的占比，以及安全行业经验是否可通过入职培训补齐，再决定是否投入。",
+      "questions": [
+        "你之前销售软件的客户类型主要是？是企业/单位还是个人或小商户，客单价和决策链大概怎样？",
+        "过往工作中有没有和渠道商、代理商或集成商对接/协作的经历，哪怕是辅助支持？"
+      ],
+      "stale_at_completion": false,
+      "profile_revision": 1,
+      "job_revision": 1
+    },
+    "metrics": {
+      "queue_seconds": 7.806,
+      "provider": "api",
+      "phase": "done",
+      "attempt": 1,
+      "attempt_started": 1790661627.440709,
+      "prompt_chars": 1816,
+      "response_mode": "complete",
+      "structured": true,
+      "json_mode": true,
+      "input_tokens": 979,
+      "output_tokens": 3316,
+      "total_tokens": 4295,
+      "model_seconds": 44.654,
+      "attempt_seconds": 44.654,
+      "total_seconds": 52.46
+    },
+    "error": null
+  },
+  "tested_change": "RC4.3.22 authorization fix; smoke version label was still RC4.3.21 before packaging bump"
+}

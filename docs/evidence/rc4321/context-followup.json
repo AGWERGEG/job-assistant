@@ -1,0 +1,51 @@
+{
+  "version": "1.0.0-rc.4.3.21",
+  "fixture_only": true,
+  "production_user_data_modified": false,
+  "model": "deepseek-v4-pro",
+  "endpoint": "https://api.deepseek.com",
+  "turns": [
+    {
+      "case": "context",
+      "input": "回到刚才这个岗位，结合我已经确认的经历，聊聊有哪些相关的地方、哪些信息还不清楚，先不用生成报告。",
+      "kind": "companion_chat",
+      "status": "done",
+      "reply": "结合岗位要求和你已确认的经历，我分两块说。\n**比较相关的地方**\n已确认资料说明客户销售经历，客户是否为企业或机构尚待确认。\n- 协助制作过产品演示，和企业软件销售场景中的沟通、展示有一定关联，算是一个可以带上的点。**目前还不太清楚的部分**\n- 安全行业经验：JD 写的是\"优先\"，你这边没有提供安全行业的相关经历，所以是否构成加分项缺口待确认，但不等于不满足硬性要求。- 渠道伙伴拓展：这是 JD 里的明确职责之一，你目前确认的经历里没有提到渠道/伙伴拓展，这块信息还需要补充。- 回款：JD 提到负责回款，你现有经历里只提到需求沟通和老客户维护，是否接触过回款、账期跟进这类工作，目前还不清楚。简单说，客户销售和需求沟通这块是稳的相关项；安全行业、渠道拓展、回款这三处需要进一步补充信息。要不要就其中某一项，说说你实际有没有接触过？我可以帮你判断怎么更贴合岗位去表达。",
+      "error": null,
+      "metrics": {
+        "queue_seconds": 0.003,
+        "provider": "api",
+        "phase": "done",
+        "attempt": 1,
+        "attempt_started": 1790657350.5291278,
+        "prompt_chars": 1241,
+        "response_mode": "reviewed",
+        "structured": false,
+        "json_mode": false,
+        "first_response_seconds": 9.617,
+        "dialogue_agent": true,
+        "requests": 3,
+        "input_tokens": 2957,
+        "output_tokens": 690,
+        "tool_calls": [
+          "read_current_job",
+          "read_confirmed_experience"
+        ],
+        "review": {
+          "performed": true,
+          "issues": [
+            "将信息缺失描述为能力缺口",
+            "将待确认事项表述为确定的事实差异"
+          ],
+          "revised": true
+        },
+        "recovered_receipt": false,
+        "model_seconds": 9.629,
+        "attempt_seconds": 9.629,
+        "total_seconds": 9.632
+      },
+      "seconds": 9.633
+    }
+  ],
+  "analysis_count": 0
+}

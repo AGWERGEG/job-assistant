@@ -6,7 +6,7 @@ from .store import Problem, text_field
 PLACEHOLDER = re.compile(r'\[(?:本地隐去|姓名|手机号|电话|邮箱|地址|微信|链接|证件号码|长号码|密钥)\]')
 LABELS = {'姓名': ('真实姓名', '姓名'), '手机号': ('手机号', '手机', '电话'),
           '邮箱': ('邮箱', '电子邮件'), '微信': ('微信号', '微信'),
-          '地址': ('联系地址', '家庭住址', '现居住址', '详细地址', '住址', '地址')}
+          '地址': ('联系地址', '家庭住址', '居住地址', '居住地', '户籍', '现居住址', '现居', '详细地址', '住址')}
 
 
 def preview_resume(store, version_id):
@@ -22,7 +22,9 @@ def preview_resume(store, version_id):
     if profile.get('name', '').strip():
         values['姓名'].add(profile['name'].strip())
     for key, aliases in LABELS.items():
-        pattern = r'(?:^|[\n|｜；;，,])\s*(?:' + '|'.join(aliases) + r')\s*[:：]\s*([^\n|｜；;，,]+)'
+        next_field = r'(?=\s+(?:性别|年龄|电话|手机|邮箱|电子邮件|微信|地址)\s*[:：])'
+        pattern = (r'(?:^|[\n|｜；;,，])\s*(?:' + '|'.join(aliases) + r')\s*[:：]\s*'
+                   r'(.*?)(?=\t| {2,}|[\n|｜；;,，]|$|' + next_field + r')')
         for match in re.finditer(pattern, source):
             value = match[1].strip()
             if value and not PLACEHOLDER.search(value):
@@ -30,7 +32,7 @@ def preview_resume(store, version_id):
     # Resume headers often omit labels. Read only the original candidate
     # resume, never the JD or HR messages; ambiguous contacts remain manual.
     phone = r'(?<!\d)(?:\+?86[ -]?)?1[3-9](?:[ -]?\d){9}(?!\d)'
-    email = r'[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}'
+    email = r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
     values['手机号'] = set(re.findall(phone, source))
     values['邮箱'] = set(re.findall(email, source))
     unique = {k: next(iter(v)) for k, v in values.items() if len(v) == 1}

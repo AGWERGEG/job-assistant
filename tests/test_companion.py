@@ -1,3 +1,4 @@
+from app.version import EXTENSION_ID
 import json
 import tempfile
 import threading
@@ -105,6 +106,19 @@ class CompanionTests(unittest.TestCase):
         fresh.onboarding_action({'action':'skip'})
         self.assertFalse(fresh.onboarding_state()['active'])
 
+    def test_skipped_guide_has_an_actionable_readiness_reason(self):
+        fresh = Companion(Store(str(Path(self.temp.name) / 'guide-readiness')))
+        fresh.onboarding_action({'action': 'skip'})
+        public = fresh.settings(public=True)
+        self.assertFalse(fresh.ready())
+        self.assertEqual(public['readiness']['state'], 'profile_required')
+        self.assertEqual(public['readiness']['page'], 'profile')
+        self.assertNotIn('api_key', public['readiness'])
+        fresh.store.save_profile({'facts': '校园活动：负责报名、沟通与复盘。', 'preferences': '杭州运营'})
+        self.assertEqual(fresh.settings(public=True)['readiness']['state'], 'privacy_required')
+        fresh.approve({'token': fresh.preview_profile()['token'], 'confirmed': True})
+        self.assertEqual(fresh.settings(public=True)['readiness']['state'], 'ready')
+
     def test_codex_login_check_distinguishes_missing_login(self):
         from app.worker import codex_login_check
         with patch('app.worker.subprocess.run', return_value=SimpleNamespace(returncode=1, stdout='Not logged in', stderr='')):
@@ -158,6 +172,16 @@ class CompanionTests(unittest.TestCase):
         second = self.turn('HR让我改简历，我有点担心', request='discussion')
         self.assertEqual(second['kind'], 'companion_chat')
 
+    def test_detailed_analysis_phrasing_routes_to_background(self):
+        for index, message in enumerate((
+            '详细分析一下这个岗位',
+            '结合公司背景全面判断这个机会',
+            '请系统拆解岗位要求和我的经历',
+        )):
+            task = self.turn(message, request='deep-'+str(index))
+            self.assertEqual(task['kind'], 'analyze_job')
+            self.store.cancel(task['id'])
+
     def test_endpoint_change_clears_old_key_and_http_remote_is_rejected(self):
         self.c.save_settings({'base_url': 'https://example.com/v1', 'api_key': 'synthetic-secret'})
         self.c.save_settings({'base_url': 'https://new.example.com/v1', 'api_key': ''})
@@ -169,6 +193,32 @@ class CompanionTests(unittest.TestCase):
         self.c.save_settings({'provider': 'api', 'base_url': 'https://api.example.com/v1', 'api_model': 'test-model', 'clear_api_key': True})
         with self.assertRaisesRegex(Problem, '尚未保存 API 密钥'):
             test_connection(self.c.settings())
+
+    def test_connection_test_falls_back_when_stream_is_incompatible(self):
+        from app.providers import test_connection
+        cfg={'provider':'api','api_key':'synthetic','stream':True}
+        with patch('app.providers.complete',side_effect=[Problem('流式连接提前结束'), 'OK', '{"ok":true}']) as call:
+            result=test_connection(cfg)
+        self.assertFalse(result['stream_supported']);self.assertIn('自动改用',result['message'])
+        self.assertTrue(result['structured_supported']);self.assertEqual(call.call_count,3);self.assertIsNotNone(call.call_args_list[0].kwargs.get('on_delta'))
+        self.assertFalse(call.call_args_list[1].args[0]['stream'])
+
+    def test_prompt_budget_selects_relevant_profile_without_mutating_snapshot(self):
+        facts=[]
+        for index in range(20):
+            facts.append(f'普通经历{index}\n2024年负责日常行政归档、会议记录和物品整理。')
+        facts.insert(7,'AI产品销售经历\n2025年负责企业客户需求沟通、产品演示、方案整理与合同跟进。')
+        full='\n\n'.join(facts)
+        self.store.save_profile({'facts':full,'preferences':'销售'})
+        self.approve()
+        job=self.store.save_job({'title':'AI解决方案销售','company':'虚构公司','jd':'负责AI产品销售、企业客户开发、产品演示、方案沟通和合同跟进。'})
+        task=self.store.create_task({'kind':'tailor_resume','job_id':job['id'],'instruction':'优化简历'})
+        stored=self.store.get_task(task['id'])['context']['profile']['facts']
+        prompt=prompt_for(self.store.get_task(task['id']),self.c.settings())
+        self.assertEqual(stored,full)
+        self.assertIn('AI产品销售经历',prompt)
+        self.assertLess(len(prompt),len(full)+2400)
+        self.assertIn('未发送不代表没有相关经历',prompt)
 
     def test_legacy_confirmed_user_with_partial_guide_fields_is_not_onboarded_again(self):
         legacy = self.c.settings()
@@ -201,11 +251,17 @@ class CompanionTests(unittest.TestCase):
         t = self.turn(kind='tailor_resume')
         self.c.save_settings({'provider':'api','base_url':'https://example.com/v1','api_model':'synthetic'})
         result = {'summary':'虚构回归结果','decision':'突出活动协调','strategy':'保留事实','primary_output':'负责活动报名与复盘','questions':[],'markdown':'前置校园活动经历。'}
-        with patch('app.worker.api_complete', return_value=json.dumps(result)) as call:
+        def fake(*args,**kwargs):
+            kwargs['on_usage']({'prompt_tokens':321,'completion_tokens':123,'total_tokens':444})
+            return json.dumps(result)
+        with patch('app.worker.api_complete', side_effect=fake) as call:
             CodexWorker(self.store, '.').run_one()
             self.assertTrue(call.call_args.kwargs['structured'])
+            self.assertTrue(call.call_args.kwargs['on_usage'])
         done = self.store.get_task(t['id'])
         self.assertEqual(done['status'],'done')
+        self.assertEqual(done['metrics']['input_tokens'],321)
+        self.assertEqual(done['metrics']['output_tokens'],123)
         self.assertTrue(self.c.accept_resume({'task_id':t['id'],'content':done['result']['primary_output']})['saved'])
 
     def test_http_bridge_cannot_access_settings_or_unconfirmed_history(self):
@@ -215,12 +271,12 @@ class CompanionTests(unittest.TestCase):
         threading.Thread(target=server.serve_forever, daemon=True).start()
         self.addCleanup(server.server_close); self.addCleanup(server.shutdown)
         base = f'http://127.0.0.1:{server.server_port}'
-        session = json.load(urllib.request.urlopen(base+'/api/session'))
+        session = {'token':server.session_token}
         def post(path, payload, headers):
             req = urllib.request.Request(base+path, data=json.dumps(payload).encode(), headers={'Content-Type':'application/json', **headers})
             return json.load(urllib.request.urlopen(req))
         code = post('/api/extension-code', {}, {'X-Local-Token':session['token']})['code']
-        origin = 'chrome-extension://'+'b'*32
+        origin = 'chrome-extension://'+EXTENSION_ID
         pair = post('/bridge/pair', {'code': code}, {'Origin':origin})
         headers = {'Origin':origin,'X-Bridge-Token':pair['token']}
         with self.assertRaises(urllib.error.HTTPError) as error:
@@ -259,12 +315,12 @@ class CompanionTests(unittest.TestCase):
             def log_message(self, *args): pass
             def do_POST(self):
                 captured.append((self.path, self.headers.get('Authorization'), json.loads(self.rfile.read(int(self.headers['Content-Length'])))))
-                data = json.dumps({'choices': [{'message': {'content': '先一起看看这份岗位的日常工作。'}, 'finish_reason': 'stop'}]}).encode()
-                self.send_response(200); self.end_headers(); self.wfile.write(data)
+                data = ('data: ' + json.dumps({'id':'fixture','object':'chat.completion.chunk','created':0,'model':'fixture','choices':[{'index':0,'delta':{'role':'assistant','content':'好，你慢慢说。'},'finish_reason':None}]}) + '\n\ndata: ' + json.dumps({'id':'fixture','object':'chat.completion.chunk','created':0,'model':'fixture','choices':[{'index':0,'delta':{},'finish_reason':'stop'}]}) + '\n\ndata: [DONE]\n\n').encode()
+                self.send_response(200); self.send_header('Content-Type','text/event-stream'); self.send_header('Content-Length',str(len(data))); self.end_headers(); self.wfile.write(data)
         server = ThreadingHTTPServer(('127.0.0.1', 0), Fake)
         thread = threading.Thread(target=server.serve_forever, daemon=True); thread.start()
         self.addCleanup(server.server_close); self.addCleanup(server.shutdown)
-        self.c.save_settings({'provider': 'api', 'base_url': f'http://127.0.0.1:{server.server_port}/v1', 'api_model': 'test-model', 'api_key': 'synthetic-secret'})
+        self.c.save_settings({'provider': 'api', 'base_url': f'http://127.0.0.1:{server.server_port}/v1', 'api_model': 'test-model', 'api_key': 'synthetic-secret','dialogue_agent':True})
         t = self.turn('陈晓雨 13812345678 想聊聊')
         worker = CodexWorker(self.store, '.', timeout=5)
         self.assertTrue(worker.run_one())
@@ -286,7 +342,7 @@ class CompanionTests(unittest.TestCase):
         def fake_run(command, prompt, work, timeout, cancelled):
             calls.append(prompt)
             target = command[command.index('--output-last-message')+1]
-            Path(target).write_text('可以先用校园活动协调经历说明你怎样推进工作。')
+            Path(target).write_text('可以先用校园活动协调经历说明你怎样推进工作。', encoding='utf-8')
             return SimpleNamespace(returncode=0)
         worker = CodexWorker(self.store, '.', codex_bin='/bin/true')
         with patch('app.worker.run_codex', side_effect=fake_run):
@@ -304,7 +360,7 @@ class CompanionTests(unittest.TestCase):
         self.assertEqual(self.store.get_task(t['id'])['status'], 'failed')
 
     def test_bridge_requires_confirmation_and_rejects_old_sequence(self):
-        b = Bridge(self.store); client = 'chrome-extension://'+'a'*32
+        b = Bridge(self.store); client = 'chrome-extension://'+EXTENSION_ID
         payload = {'scope': 'scope1', 'seq': 1, 'capture': {'job_key': 'job1234', 'url': 'https://www.zhipin.com/job_detail/job1234.html', 'title': '运营', 'company': '公司', 'jd': '整理数据并执行校园活动，做好活动沟通和复盘。'*4}}
         b.capture(client, payload)
         with self.assertRaises(Problem):

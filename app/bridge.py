@@ -1,35 +1,90 @@
 """Narrow, paired extension gateway. No cookies, files or candidate data APIs."""
 import hashlib
+import hmac
 import re
 import secrets
 import threading
 import time
 import uuid
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 from .store import Problem, text_field, require_object
-from .company import company_ref, bind, Company
+from .company import company_ref, source_url as company_source_url, bind, Company
+from .version import EXTENSION_ID, EXTENSION_NAME, VERSION, is_extension_origin
 
 PROMPT_VERSION = "companion-v5-privacy1"
-EXTENSION_ORIGIN = re.compile(r"^chrome-extension://[a-p]{32}$")
+# Kept as a narrow compatibility export for the server's CORS and preflight
+# checks. Unlike the old pattern, this only matches this shipped extension.
+EXTENSION_ORIGIN = re.compile(r"^chrome-extension://" + re.escape(EXTENSION_ID) + r"$")
 
 
 def digest(value):
     return hashlib.sha256(value.encode()).hexdigest()
+
+JOB_KEY = re.compile(r"^[A-Za-z0-9._~-]{4,200}$")
+
+
+def extension_name_hint(name, extension_id):
+    return f"{name} · {extension_id}"
+
+
+def source_identity(url):
+    parsed = urlparse(url)
+    host = (parsed.hostname or "").lower()
+    if parsed.scheme != "https" or parsed.username or parsed.password:
+        return None
+    if host in ("www.zhipin.com", "zhipin.com"):
+        match = re.fullmatch(r"/job_detail/([A-Za-z0-9_-]{4,200})\.html", parsed.path)
+        return ("boss", match.group(1)) if match else None
+    if host == "zhaopin.com" or host.endswith(".zhaopin.com"):
+        match = re.fullmatch(r"/jobdetail/([A-Za-z0-9._~-]{4,200})\.(?:htm|html)", parsed.path, re.I)
+        if not match:
+            match = re.fullmatch(r"/(?:position|job)/([A-Za-z0-9._~-]{4,200})(?:/|\.(?:htm|html))?", parsed.path, re.I)
+        return ("zhaopin", match.group(1)) if match else None
+    if host == "58.com" or host.endswith(".58.com"):
+        match = re.fullmatch(r"/zp[^/]+/([A-Za-z0-9_-]{8,200})\.(?:shtml|html)", parsed.path, re.I)
+        if not match and re.search(r"(?:job|zhaopin|detail)[/_-]", parsed.path, re.I):
+            raw = parsed.path.rstrip("/").rsplit("/", 1)[-1]
+            raw = re.sub(r"\.(?:shtml|html?)$", "", raw, flags=re.I)
+            match = re.fullmatch(r"([A-Za-z0-9._~-]{4,200})", raw)
+        return ("58", match.group(1)) if match else None
+    return None
+
+
+def safe_recruitment_url(raw, kind):
+    url = text_field(raw, '招聘网页链接', 2000, True)
+    try: parsed = urlparse(url)
+    except ValueError: raise Problem('招聘网页链接无效')
+    host = (parsed.hostname or '').lower()
+    site = 'boss' if host in ('www.zhipin.com','zhipin.com') else 'zhaopin' if host == 'zhaopin.com' or host.endswith('.zhaopin.com') else '58' if host == '58.com' or host.endswith('.58.com') else ''
+    try: valid_port = parsed.port in (None,443)
+    except ValueError: valid_port = False
+    if parsed.scheme != 'https' or not site or parsed.username or parsed.password or not valid_port:
+        raise Problem('只允许记录支持招聘网站的 HTTPS 链接')
+    if kind == 'job_detail' and not source_identity(url):
+        raise Problem('请先打开独立岗位详情页录入 JD')
+    if kind == 'hr_chat' and not re.search(r'/chat|/geek/chat|/im/',parsed.path,re.I):
+        raise Problem('当前页面不是可识别的 HR 聊天页')
+    # Chat identifiers often live in the query string. Keep it for exact
+    # matching; the record stays local and is never sent to a model.
+    return urlunparse(('https',host,parsed.path,'',parsed.query, '')),site
 
 
 def normalize_capture(value):
     require_object(value)
     url = text_field(value.get("url", ""), "岗位链接", 2000, True)
     parsed = urlparse(url)
-    if parsed.scheme != "https" or parsed.hostname not in ("www.zhipin.com", "zhipin.com") or parsed.username or parsed.password:
-        raise Problem("只接收 BOSS HTTPS 岗位来源")
+    host=(parsed.hostname or '').lower()
+    if parsed.scheme != "https" or parsed.username or parsed.password or not (host in ("www.zhipin.com","zhipin.com") or host=='zhaopin.com' or host.endswith('.zhaopin.com') or host=='58.com' or host.endswith('.58.com')):
+        raise Problem("只接收支持招聘网站的 HTTPS 岗位来源")
     job_key = text_field(value.get("job_key", ""), "平台岗位标识", 200, True)
-    if not re.fullmatch(r"[A-Za-z0-9_-]{4,200}", job_key):
+    if not JOB_KEY.fullmatch(job_key):
         raise Problem("平台岗位标识无效")
-    # Bind the claimed identity to the actual detail URL, never the list URL.
-    if parsed.path != f"/job_detail/{job_key}.html":
+    # Bind every claimed identity to its canonical public detail URL.
+    identity = source_identity(url)
+    if not identity or identity[1] != job_key:
         raise Problem("岗位标识与来源链接不一致")
+    site = identity[0]
     title = text_field(value.get("title", ""), "岗位名称", 200, True)
     company = text_field(value.get("company", ""), "公司", 300, True)
     jd = text_field(value.get("jd", ""), "JD", 50000, True)
@@ -39,8 +94,10 @@ def normalize_capture(value):
     if method not in ("dom", "selection"):
         raise Problem("采集方式无效")
     # Discard tracking params, security tokens and fragments at the boundary.
-    result={"job_key": job_key, "url": f"https://www.zhipin.com/job_detail/{job_key}.html",
-            "title": title, "company": company, "jd": jd, "method": method}
+    result={"job_key": job_key, "url": (f"https://www.zhipin.com/job_detail/{job_key}.html" if site=='boss' else f"{parsed.scheme}://{parsed.netloc}{parsed.path}"),
+            "title": title, "company": company, "jd": jd, "method": method, "source_site": site}
+    if site == 'boss' and value.get('recruiter_name'):
+        result['recruiter_name'] = text_field(value['recruiter_name'], '招聘者姓名', 100, True)
     if value.get('company_key'):
         key,company_url=company_ref(value)
         result.update(company_key=key,company_url=company_url)
@@ -55,6 +112,7 @@ class Bridge:
         self.code_until = 0
         self.failed_pairs = []
         self.clients = {}
+        self.pair_requests = {}
         self.pairing_revision = secrets.token_hex(8)
         self.scopes = {}
         self.last_auto = {}
@@ -77,11 +135,91 @@ class Bridge:
 
     def pairing_state(self):
         with self.lock:
-            return {"extension_paired": bool(self.clients), "extension_pairing_revision": self.pairing_revision}
+            now = time.time()
+            self.pair_requests = {key: request for key, request in self.pair_requests.items() if request["expires"] > now}
+            return {"extension_paired": bool(self.clients), "extension_pairing_revision": self.pairing_revision,
+                    "extension_pair_requests": sum(1 for request in self.pair_requests.values() if request["status"] == "pending")}
+
+    def discover(self, origin):
+        if not is_extension_origin(origin):
+            raise Problem("只允许浏览器扩展发现本机服务", 403)
+        return {"ok": True, "version": VERSION, "pairing": "confirmation"}
+
+    def server_proof(self, origin, nonce):
+        if not is_extension_origin(origin):
+            raise Problem("只允许浏览器扩展验证本机服务", 403)
+        if not isinstance(nonce, str) or not re.fullmatch(r"[0-9a-f]{64}", nonce):
+            raise Problem("服务验证随机数无效")
+        with self.lock:
+            token = self.clients.get(origin)
+            if not token:
+                raise Problem("扩展未配对或服务已重启，请重新配对", 401)
+            proof = hmac.new(token.encode("utf-8"), nonce.encode("ascii"), hashlib.sha256).hexdigest()
+        return {"version": VERSION, "nonce": nonce, "proof": proof}
+
+    def request_pair(self, origin):
+        if not is_extension_origin(origin):
+            raise Problem("只允许浏览器扩展申请连接", 403)
+        with self.lock:
+            now = time.time()
+            self.pair_requests = {key: request for key, request in self.pair_requests.items() if request["expires"] > now}
+            for request_id, request in self.pair_requests.items():
+                if request["origin"] == origin and request["status"] == "pending":
+                    return {"request_id": request_id, "expires_in": max(1, int(request["expires"] - now))}
+            if len(self.pair_requests) >= 20:
+                raise Problem("本机连接申请过多，请稍后重试", 429)
+            request_id = secrets.token_urlsafe(32)
+            self.pair_requests[request_id] = {"origin": origin, "status": "pending", "expires": now + 300, "token": ""}
+            return {"request_id": request_id, "expires_in": 300}
+
+    def pair_request_info(self, request_id):
+        with self.lock:
+            request = self.pair_requests.get(request_id)
+            if not request or request["expires"] <= time.time():
+                self.pair_requests.pop(request_id, None)
+                raise Problem("连接申请不存在或已过期，请从侧栏重新发起", 404)
+            extension_id = request["origin"].removeprefix("chrome-extension://")
+            return {"request_id": request_id, "status": request["status"],
+                    "extension_id": extension_id, "extension_name": EXTENSION_NAME,
+                    "extension_hint": extension_name_hint(EXTENSION_NAME, extension_id),
+                    "expires_in": max(1, int(request["expires"] - time.time()))}
+
+    def approve_pair_request(self, request_id, confirmed):
+        if confirmed is not True:
+            raise Problem("请明确确认连接这个侧栏")
+        with self.lock:
+            request = self.pair_requests.get(request_id)
+            if not request or request["expires"] <= time.time():
+                self.pair_requests.pop(request_id, None)
+                raise Problem("连接申请不存在或已过期，请从侧栏重新发起", 404)
+            if request["status"] != "approved":
+                token = secrets.token_urlsafe(32)
+                request["token"] = token
+                request["status"] = "approved"
+                self.clients[request["origin"]] = token
+                self.pairing_revision = secrets.token_hex(8)
+            return {"approved": True, **self.pair_request_info(request_id)}
+
+    def pair_request_status(self, origin, request_id):
+        if not is_extension_origin(origin):
+            raise Problem("只允许浏览器扩展查询连接申请", 403)
+        with self.lock:
+            request = self.pair_requests.get(request_id)
+            if not request or request["expires"] <= time.time():
+                self.pair_requests.pop(request_id, None)
+                raise Problem("连接申请不存在或已过期，请重新发起", 404)
+            if request["origin"] != origin:
+                raise Problem("连接申请不属于当前扩展", 403)
+            response = {"status": request["status"], "expires_in": max(1, int(request["expires"] - time.time()))}
+            if request["status"] == "approved":
+                response["token"] = request["token"]
+                response["version"] = VERSION
+            return response
 
     def disconnect(self, origin):
         with self.lock:
             self.clients.pop(origin, None)
+            self.pair_requests = {key: request for key, request in self.pair_requests.items() if request["origin"] != origin}
         return {"disconnected": True}
 
     def pair(self, origin, value):
@@ -92,14 +230,14 @@ class Bridge:
                 raise Problem("配对尝试过多，请一分钟后重试", 429)
             offered = value.get("code", "")
             valid = isinstance(offered, str) and self.code and self.code_until > now and secrets.compare_digest(offered, self.code)
-            if not EXTENSION_ORIGIN.fullmatch(origin or "") or not valid:
+            if not is_extension_origin(origin) or not valid:
                 self.failed_pairs.append(now)
                 raise Problem("配对码错误或已过期，请在本地工作台重新生成", 403)
             key = secrets.token_urlsafe(32)
             self.clients[origin] = key
             self.pairing_revision = secrets.token_hex(8)
             self.code = None
-            return {"token": key, "version": "0.4.0", "scope": "job-capture-and-advice-only"}
+            return {"token": key, "version": VERSION, "scope": "job-capture-and-advice-only"}
 
     def authenticate(self, origin, token):
         with self.lock:
@@ -112,6 +250,7 @@ class Bridge:
         with self.lock:
             self.clients.clear()
             self.code = None
+            self.pair_requests.clear()
             for scope in self.scopes:
                 self._cancel_queued(scope)
             self.scopes.clear()
@@ -130,9 +269,95 @@ class Bridge:
                 ref=db.execute('SELECT company_key FROM job_companies WHERE job_id=?',(row['id'],)).fetchone()
             job={k:row[k] for k in ('id','title','company','url','revision')};job['company_key']=ref[0] if ref else ''
             self.scopes[scope]={'seq':seq,'job_id':row['id'],'revision':row['revision'],'confirmed':True}
-            import re
-            match=re.search(r'/job_detail/([A-Za-z0-9_-]+)\.html',row['url'])
-            return {'seq':seq,'job':job,'capture':{'job_key':match[1] if match else '', 'url':row['url'],'title':row['title'],'company':row['company'],'company_key':job['company_key'],'method':'restored'}}
+            identity=source_identity(row['url'])
+            return {'seq':seq,'job':job,'capture':{'job_key':identity[1] if identity else '', 'source_site':identity[0] if identity else '', 'url':row['url'],'title':row['title'],'company':row['company'],'company_key':job['company_key'],'method':'restored'}}
+
+    def jobs(self, client, value):
+        self._scope(client,value)
+        with self.store.connect() as db:
+            rows=db.execute("SELECT j.id,j.title,j.company,j.url,j.revision,COALESCE(MAX(m.created),0) AS last_chat_at FROM jobs j LEFT JOIN messages m ON m.job_id=j.id GROUP BY j.id ORDER BY last_chat_at DESC,j.created DESC").fetchall()
+            return {'jobs':[{k:r[k] for k in ('id','title','company','revision','last_chat_at')} for r in rows]}
+
+    def select(self, client, value):
+        scope=self._scope(client,value); seq=value.get('seq')
+        if type(seq) is not int or seq<1:raise Problem('切换序号无效')
+        job_id=text_field(value.get('job_id',''),'岗位',100,True)
+        with self.lock:
+            old=self.scopes.get(scope)
+            if old and seq<=old['seq']:raise Problem('旧的切换请求',409)
+            with self.store.connect() as db:
+                job=db.execute('SELECT * FROM jobs WHERE id=?',(job_id,)).fetchone()
+                if not job:raise Problem('岗位不存在',404)
+                ref=db.execute('SELECT company_key FROM job_companies WHERE job_id=?',(job_id,)).fetchone()
+                db.execute('INSERT OR REPLACE INTO saved_targets VALUES(?,?)',(client,job_id))
+            self.scopes[scope]={'seq':seq,'job_id':job_id,'revision':job['revision'],'confirmed':True}
+            self._cancel_queued(scope)
+            identity=source_identity(job['url'])
+            public={k:job[k] for k in ('id','title','company','url','revision')};public['company_key']=ref[0] if ref else ''
+            return {'seq':seq,'job':public,'capture':{'job_key':identity[1] if identity else '', 'source_site':identity[0] if identity else '', 'url':job['url'],'title':job['title'],'company':job['company'],'company_key':public['company_key'],'method':'selected'}}
+
+    def links(self, client, value):
+        self._scope(client,value)
+        job_id=text_field(value.get('job_id',''),'岗位',100,True)
+        with self.store.connect() as db:
+            if not db.execute('SELECT 1 FROM jobs WHERE id=?',(job_id,)).fetchone():raise Problem('岗位不存在',404)
+        return {'links':[{'kind':link['kind'],'url':link['url'],'updated':link['updated']}
+                         for link in self.store.list_job_links(job_id)]}
+
+    def link_context(self, client, value):
+        self._scope(client,value)
+        from .chat_links import chat_identity, match_job
+        chat=chat_identity(value.get('chat'))
+        link=self.store.chat_binding(chat['key'])
+        if link:
+            with self.store.connect() as db:
+                job=db.execute('SELECT * FROM jobs WHERE id=?',(link['job_id'],)).fetchone()
+            reason=match_job(chat,job,self.store.recruiter_for_job(link['job_id'])) if job else '岗位已不存在'
+            if link['recruiter_name']!=chat['recruiter_name'] or link['company']!=chat['company'] or link['job_title']!=chat['job_title']:
+                reason=reason or '会话信息与已保存绑定不一致'
+            return {'link':{'job_id':link['job_id'],'title':link['title'],
+                            'company':link['job_company'],'recruiter_name':link['recruiter_name']},
+                    'conflict':reason,'matches':[],'legacy':False,
+                    'recruiter_verified':bool(self.store.recruiter_for_job(link['job_id']))}
+        matches=[]
+        for job in self.store.state()['jobs']:
+            if not match_job(chat,job,self.store.recruiter_for_job(job['id'])):
+                matches.append({'id':job['id'],'title':job['title'],'company':job['company'],
+                                'recruiter_verified':bool(self.store.recruiter_for_job(job['id']))})
+        with self.store.connect() as db:
+            legacy=bool(db.execute("SELECT 1 FROM job_links WHERE kind='hr_chat' AND url=? LIMIT 1",
+                                   (chat['url'],)).fetchone())
+        return {'link':None,'conflict':'','matches':matches,'legacy':legacy}
+
+    def link_save(self, client, value):
+        from .chat_links import chat_identity, match_job
+        scope=self._scope(client,value)
+        chat=chat_identity(value.get('chat'))
+        job_id=text_field(value.get('job_id',''),'岗位',100,True)
+        with self.lock:
+            current=self.scopes.get(scope)
+            if not current or not current.get('confirmed') or value.get('seq')!=current['seq'] or current['job_id']!=job_id:
+                raise Problem('请先手动选定待关联岗位',409)
+            with self.store.connect() as db:
+                job=db.execute('SELECT * FROM jobs WHERE id=?',(job_id,)).fetchone()
+            if not job: raise Problem('岗位不存在',404)
+            reason=match_job(chat,job,self.store.recruiter_for_job(job_id))
+            if reason: raise Problem('关联核验失败：'+reason,409)
+            return {'link':self.store.bind_chat(chat,job_id)}
+
+    def link_unbind(self, client, value):
+        from .chat_links import chat_identity
+        self._scope(client,value)
+        chat=chat_identity(value.get('chat'))
+        job_id=text_field(value.get('job_id',''),'岗位',100,True)
+        return self.store.unbind_chat(chat['key'],job_id)
+
+    def resume_import(self, client, value):
+        """Persist only an explicitly requested online-resume draft locally."""
+        from .profile_import import ProfileImport
+        # Authentication is enforced by the HTTP boundary. The client argument
+        # is intentionally not stored, so extension identity never enters a CV.
+        return ProfileImport(self.store).save(value)
 
     def _cancel_queued(self, scope, except_task=None):
         with self.store.connect() as db:
@@ -157,7 +382,7 @@ class Bridge:
                 self._cancel_queued(scope)
                 return {"seq": seq, "job": None}
             capture = normalize_capture(value["capture"])
-            source_key = "boss:" + capture["job_key"]
+            source_key = capture.get('source_site','boss') + ":" + capture["job_key"]
             fingerprint = digest(capture["title"] + "\n" + capture["company"] + "\n" + capture["jd"])
             with self.store.connect() as db:
                 db.execute("BEGIN IMMEDIATE")
@@ -174,6 +399,9 @@ class Bridge:
                 db.execute("INSERT OR REPLACE INTO browser_captures VALUES(?,?,?,?,?)", (source_key, job_id, fingerprint, time.time(), capture["method"]))
                 job = dict(db.execute("SELECT * FROM jobs WHERE id=?", (job_id,)).fetchone())
                 if capture.get('company_key'):bind(db,job_id,capture,capture['company'])
+                if capture.get('recruiter_name'):
+                    db.execute('INSERT OR REPLACE INTO job_recruiters VALUES(?,?,?,?)',
+                               (job_id,capture['recruiter_name'],capture['url'],time.time()))
             self.scopes[scope] = {"seq": seq, "job_id": job_id, "revision": job["revision"]}
             self._cancel_queued(scope)
             return {"seq": seq, "job": {**{k: job[k] for k in ("id", "title", "company", "url", "revision")}, 'company_key':capture.get('company_key','')}}
@@ -252,6 +480,9 @@ class Bridge:
             if not job or job['revision'] != current['revision']:
                 raise Problem('岗位内容已更新，请重新识别并确认', 409)
             if action == 'confirm':
+                if job['url']:
+                    url,_=safe_recruitment_url(job['url'],'job_detail')
+                    self.store.save_job_link({'job_id':job['id'],'kind':'job_detail','url':url})
                 current['confirmed'] = True
                 with self.store.connect() as db:db.execute('INSERT OR REPLACE INTO saved_targets VALUES(?,?)',(client,current['job_id']))
                 # Only an explicit “confirm this job” may advance the first-use loop.
@@ -262,13 +493,32 @@ class Bridge:
                 raise Problem('先确认这个岗位，再一起聊', 409)
             if action == 'company-save':
                 return {'company':Company(self.store).ingest(current['job_id'],value.get('company',{})),'seq':current['seq'],'job_id':current['job_id']}
+            if action == 'company-bind':
+                data=value.get('company')
+                key,company_url=company_ref(data)
+                source=company_source_url(data.get('source_url',''))
+                if source!=job['url']:
+                    try:source_key,_=company_ref({**data,'company_url':source})
+                    except Problem:raise Problem('请从当前目标岗位或对应公司页确认公司关联',409)
+                    if source_key!=key:raise Problem('请从当前目标岗位或对应公司页确认公司关联',409)
+                identity=source_identity(job['url'])
+                if not identity or data.get('source_site')!=identity[0]:
+                    raise Problem('公司与目标岗位不是同一招聘站点',409)
+                with self.store.connect() as db:
+                    db.execute('BEGIN IMMEDIATE')
+                    old=db.execute('SELECT company_key FROM job_companies WHERE job_id=?',(job['id'],)).fetchone()
+                    if old and old[0]!=key:
+                        raise Problem('目标岗位已经关联其他公司，未更改',409)
+                    bind(db,job['id'],data,text_field(data.get('name',''),'公司名称',300,True))
+                current['company_key']=key
+                return {'seq':current['seq'],'job_id':job['id'],'company_key':key,'company_url':company_url}
             if action == 'company-read':
                 return {'company':Company(self.store).read(current['job_id']),'seq':current['seq'],'job_id':current['job_id']}
             companion = Companion(self.store)
             if action == 'history':
                 return {**companion.history(current['job_id']), 'seq': current['seq'], 'job_id': current['job_id']}
             if action == 'talk':
-                return {**companion.send({**value, 'job_id': current['job_id']}), 'seq': current['seq']}
+                return {**companion.send({**value, 'job_id': current['job_id']}, target_client=client), 'seq': current['seq']}
             if action in ('cancel','retry'):
                 task_id=text_field(value.get('task_id',''),'任务',100,True)
                 with self.store.connect() as db:

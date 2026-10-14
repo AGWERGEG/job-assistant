@@ -1,0 +1,6 @@
+{
+  "name": "job-assistant-local-tests",
+  "private": true,
+  "scripts": {"test": "node --test tests/test_*.cjs"},
+  "devDependencies": {"jsdom": "26.1.0"}
+}

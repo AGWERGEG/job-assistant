@@ -3,3 +3,6 @@
 pypdf>=5.0,<7.0
 python-docx>=1.1,<2.0
 reportlab>=4.0,<5.0
+
+# API dialogue agent (bundled in RC4.3.21 portable runtime).
+pydantic-ai-slim[openai]==2.51.0
