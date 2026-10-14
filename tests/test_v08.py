@@ -83,7 +83,7 @@ class V08Tests(unittest.TestCase):
         self.assertLess(time.monotonic()-start,3)
 
     def test_streaming_private_term_split_not_published(self):
-        self.c.save_settings({'provider':'api','base_url':'http://127.0.0.1:1/v1','api_model':'fake','private_terms':'陈晓雨'})
+        self.c.save_settings({'provider':'api','base_url':'http://127.0.0.1:1/v1','api_model':'fake','private_terms':'陈晓雨','stream':True,'stream_verified':True})
         self.c.approve({'token':self.c.preview_profile()['token'],'confirmed':True})
         t=self.task();observed=[]
         def fake(settings,prompt,**kwargs):
@@ -101,7 +101,7 @@ class V08Tests(unittest.TestCase):
 
     def test_stream_midway_progress_and_first_response_time(self):
         events=[]
-        self.c.save_settings({'provider':'api','base_url':'http://127.0.0.1:1/v1','api_model':'fake','stream':True})
+        self.c.save_settings({'provider':'api','base_url':'http://127.0.0.1:1/v1','api_model':'fake','stream':True,'stream_verified':True})
         t=self.task()
         def fake(settings,prompt,**kwargs):
             kwargs['on_delta']('先核对工作重心。');events.append(self.s.get_task(t['id'])['partial_text'])

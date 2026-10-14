@@ -33,10 +33,15 @@ function mountWorkspace(){
  form.prepend(chat.querySelector('.task-actions'));
  form.querySelectorAll('[data-kind]').forEach(button=>button.type='button');
  const chatTools=document.createElement('div');chatTools.className='chat-tools';
- for(const [label,run] of [['切换岗位',()=>showPage('opportunities')],['任务与成果',()=>document.getElementById('session-dialog').showModal()]]){
+ for(const [label,run] of [['切换岗位',()=>openJobSwitcher()],['研究公司',()=>{if(!selected)return notice('先选择一个岗位，再研究它的公司。',true);showPage('opportunities');showOpportunity('materials');$('company-panel').open=true;setupCompanyResearch();$('company-research-open').click();}],['任务与成果',()=>document.getElementById('session-dialog').showModal()]]){
   const b=document.createElement('button');b.className='text-button';b.textContent=label;if(label==='任务与成果')b.id='session-open';b.onclick=()=>{run();if(label==='任务与成果')document.getElementById('delivery-inbox-panel').open=true;};chatTools.append(b);
  }chat.querySelector('.section-title').append(chatTools);
  const sessionDialog=document.createElement('dialog');sessionDialog.id='session-dialog';sessionDialog.setAttribute('aria-label','任务与成果');
+ const switchDialog=document.createElement('dialog');switchDialog.id='job-switch-dialog';switchDialog.setAttribute('aria-label','切换聊天岗位');
+ const switchHeading=document.createElement('div');switchHeading.className='dialog-heading';const switchTitle=document.createElement('h2');switchTitle.textContent='切换聊天岗位';switchHeading.append(switchTitle);
+ const switchClose=document.createElement('button');switchClose.textContent='收起';switchClose.className='text-button';switchClose.onclick=()=>switchDialog.close();switchHeading.append(switchClose);switchDialog.append(switchHeading);
+ const switchSearch=document.createElement('input');switchSearch.id='job-switch-search';switchSearch.type='search';switchSearch.placeholder='搜索岗位或公司';switchSearch.oninput=renderJobSwitcher;switchDialog.append(switchSearch);
+ const switchList=document.createElement('div');switchList.id='job-switch-list';switchDialog.append(switchList);document.body.append(switchDialog);
  const sessionClose=document.createElement('button');sessionClose.className='text-button';sessionClose.textContent='收起';sessionClose.onclick=()=>sessionDialog.close();sessionDialog.append(sessionClose,status);document.body.append(sessionDialog);
  pendingPanel.open=false;
  const list=document.getElementById('job-list').closest('section');list.id='opportunity-list';
@@ -61,10 +66,11 @@ function mountWorkspace(){
  const resumeAction=document.createElement('button');resumeAction.dataset.kind='tailor_resume';resumeAction.textContent='为这个岗位优化简历';resumeAction.className='secondary';document.getElementById('opportunity-resume').append(resumeAction);
  move('interview-panel',document.getElementById('opportunity-interview'));
  move('journey-panel',document.getElementById('opportunity-records'));
+ const linksPanel=document.createElement('section');linksPanel.id='job-links-panel';linksPanel.className='panel';const linksHeading=document.createElement('h2');linksHeading.textContent='网页链接记录';linksPanel.append(linksHeading);const linksList=document.createElement('div');linksList.id='job-links-list';linksPanel.append(linksList);document.getElementById('opportunity-records').append(linksPanel);
  move('deliveries',document.getElementById('opportunity-overview'));
  move('resume-versions-panel',document.getElementById('opportunity-resume'));
  move('setup',screens.profile);move('facts-panel',screens.profile);
- move('connections',screens.settings);document.getElementById('connections').open=true;
+ move('connections',screens.settings);document.getElementById('extension-pairing').before(document.getElementById('research-settings'));document.getElementById('connections').open=true;
  move('data-panel',screens.settings);
  const guide=document.createElement('p');guide.className='panel';guide.id='onboarding-guide';
  guide.textContent='先认识彼此 → 保存真实经历 → 核对脱敏内容 → 在设置中连接模型和侧栏。已保存的内容会保留，不必重新填写。';
@@ -73,6 +79,9 @@ function mountWorkspace(){
  document.querySelector('.workspace')?.remove();
  showPage('chat',false);showOpportunity('overview',false);
 }
+function openJobSwitcher(){renderJobSwitcher();document.getElementById('job-switch-dialog').showModal();document.getElementById('job-switch-search').focus();}
+function renderJobSwitcher(){const list=document.getElementById('job-switch-list');if(!list||!state)return;list.replaceChildren();const query=document.getElementById('job-switch-search').value.trim().toLowerCase();const jobs=state.jobs.filter(j=>(j.title+' '+j.company).toLowerCase().includes(query)).sort((a,b)=>{const last=id=>Math.max(0,...state.tasks.filter(t=>t.job_id===id).map(t=>t.updated||t.created));return last(b.id)-last(a.id)||(b.created||0)-(a.created||0);});for(const job of jobs){const button=el('button',job.title+(job.company?' · '+job.company:''),job.id===selected?'selected':'');button.onclick=()=>{selectJob(job.id);list.closest('dialog').close();showPage('chat');};list.append(button);}if(!jobs.length)list.append(el('p','暂无匹配岗位。可到“我的机会”添加或确认岗位。','empty'));}
+async function loadJobLinks(){const list=document.getElementById('job-links-list');if(!list)return;const id=selected;list.replaceChildren();if(!id){list.append(el('p','先选择岗位，再查看链接记录。'));return;}const result=await api('/api/job-links');if(id!==selected)return;const links=result.links.filter(link=>link.job_id===id);for(const link of links){const row=document.createElement('p');const label=link.kind==='hr_chat'?'已核验 HR 会话 · '+link.recruiter_name:link.kind==='hr_chat_legacy'?'旧版 HR 链接 · 待重新核验':'岗位详情';row.append(el('span',label+' · '+new Date(link.updated*1000).toLocaleString()+' '));if(link.kind!=='hr_chat_legacy'){const open=el('a',link.kind==='hr_chat'?'打开聊天页（需选中该 HR）':'打开岗位详情');open.href=link.url;open.target='_blank';open.rel='noopener noreferrer';row.append(open);}else row.append(el('span','请在侧栏打开该 HR 会话，按招聘者、企业和岗位重新关联。'));list.append(row);}if(!links.length)list.append(el('p','暂无记录。打开岗位详情页、读取并确认 JD 后会自动记录。'));}
 function syncWorkspaceURL(){
  const p=new URLSearchParams();if(selected)p.set('job',selected);p.set('page',workspacePage);p.set('tab',opportunityTab);
  history.replaceState(null,'','#'+p.toString());
@@ -94,6 +103,7 @@ function showOpportunity(tab,update=true){
  document.querySelector('#deliveries > p').textContent=tab==='resume'?'先核对草稿，再保存、回填与导出。原始档案保持不变。':'完整结果与依据保存在这里，聊天只显示状态和查看入口。';
  document.querySelector('#deliveries h2').textContent={overview:'详细分析',resume:'岗位简历 · 核对与交付',interview:'面试准备与复盘',materials:'任务',records:'任务'}[tab];
  if(typeof renderTasks==='function'){taskSignature='';renderTasks();}
+ if(tab==='records'&&typeof loadJobLinks==='function')loadJobLinks().catch(()=>{});
  if(update)syncWorkspaceURL();
 }
 function onboardingCopy(step,job){
@@ -103,7 +113,7 @@ function onboardingCopy(step,job){
   persona:['第 2 步 · 选你的搭子','选一种说话方式，给搭子取个顺口的称呼。'],
   profile:['第 3 步 · 留下真实经历','上传或粘贴简历，在本机建档。经历不会因为页面切换而丢失。'],
   privacy:['第 4 步 · 核对脱敏','先预览将发送给模型的职业信息，确认无误后再继续。'],
-  pairing:['连接招聘侧栏','先生成配对码，填入浏览器侧栏的“连接我的工作台”。连接成功后，这里会自动进入下一步。'],
+  pairing:['连接招聘侧栏','回到浏览器侧栏点击“连接我的工作台”。这里会弹出一次确认，确认后自动继续。'],
   browse:['接下来，去看一个岗位','回到 BOSS，点开一个你在意的岗位。侧栏读到后，会只留一个下一步按钮。'],
   first_reply:['让搭子看第一个岗位','已选定 '+name+'。回到侧栏，点“就看这个，帮我分析”。'],
   first_reply_wait:['正在看第一个岗位','简短判断会直接出现在侧栏。这一步不需要再做选择。'],
@@ -115,7 +125,7 @@ function renderOnboarding(guide,force=false){
  if(pairingRequested&&pairingBaseline===null){pairingBaseline=String(settings?.extension_pairing_revision||0);sessionStorage.setItem('job-assistant-pairing-revision',pairingBaseline);}
  if(pairingRequested&&settings?.extension_paired&&String(settings.extension_pairing_revision)!==pairingBaseline){pairingRequested=false;pairingBaseline=null;sessionStorage.removeItem('job-assistant-pairing-revision');force=true;const p=new URLSearchParams(location.hash.slice(1));p.delete('pairing');history.replaceState(null,'','#'+p.toString());if(!guide?.active)showPage('settings',false);}
  if(pairingRequested)guide={active:true,step:'pairing'};
- $('pairing-status').textContent=settings?.extension_paired&&!pairingRequested?'侧栏已配对。可以返回 BOSS 继续。':'等待侧栏连接。把配对码填入侧栏后点击“连接”。';
+ $('pairing-status').textContent=settings?.extension_paired&&!pairingRequested?'侧栏已连接。可以返回 BOSS 继续。':'等待侧栏发起连接。请回到侧栏点击“连接我的工作台”。';
  $('pair-port').textContent=location.port||'8421';
  if(typeof pairingCode!=='undefined'&&pairingCode){if(settings?.extension_paired&&!pairingRequested){pairingCode='';$('pair-code').textContent='配对成功';$('copy-pair-code').hidden=true;}else if(Date.now()>=pairingExpires){$('pair-code').textContent='配对码已过期，请重新生成';$('copy-pair-code').hidden=true;}}
  document.body.classList.toggle('first-use-mode',!!guide?.active);if(guide?.active)document.body.dataset.guideStep=guide.step;else delete document.body.dataset.guideStep;
@@ -138,11 +148,12 @@ function renderOnboarding(guide,force=false){
    const role=document.createElement('button');role.type='button';role.className='guide-role-card';role.classList.toggle('selected',$('persona').value===id);role.append(el('strong',title),el('small',words));role.onclick=()=>{$('persona').value=id;rolePreview();renderOnboarding(guide,true);$('buddy-name').focus();};roles.append(role);
   }card.append(roles);$('save-identity').textContent='记住这个称呼，继续';
  }
- if(guide.step==='profile'){$('setup').open=true;$('save-profile').textContent='保存经历，继续';}
+ if(guide.step==='profile'){$('setup').open=true;$('save-profile').textContent='保存经历，继续';const blank=el('button','使用空白模板，先看岗位','secondary');blank.type='button';blank.onclick=()=>$('use-template').click();actions.append(blank);}
  if(guide.step==='privacy'){$('setup').open=true;$('privacy-approve').textContent='确认脱敏，继续';if(guide.reviewing&&settings.ready){const b=el('button','沿用已确认档案，继续');b.onclick=()=>guideContinue().catch(e=>notice(e.message,true));actions.append(b);}}
  if(['browse','first_reply'].includes(guide.step)){const b=el('button','回到 BOSS 继续');b.onclick=()=>returnToBoss();actions.append(b);}
  if(guide.step==='first_reply_wait'){const b=el('button','回到侧栏看结果');b.onclick=()=>returnToBoss();actions.append(b);}
  if(guide.step==='first_success'){const b=el('button','结束引导，继续看岗位');b.onclick=async()=>{await finishOnboarding();};actions.append(b);}
+ if(['browse','first_reply','first_reply_wait'].includes(guide.step)){const link=el('a','直接打开 BOSS 招聘页','boss-fallback');link.href='https://www.zhipin.com/web/geek/job-recommend/';link.target='_blank';link.rel='noopener noreferrer';actions.append(link);}
  if(actions.childNodes.length)card.append(actions);
  card.append(navigation);
  showPage(host,false);

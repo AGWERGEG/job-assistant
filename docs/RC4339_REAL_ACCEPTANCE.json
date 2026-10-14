@@ -1,0 +1,252 @@
+{
+  "date": "2026-10-06",
+  "data": "fictional temporary database only",
+  "provider": "DeepSeek",
+  "model": "deepseek-v4-pro",
+  "scenarios": [
+    {
+      "label": "HR concern conversational analysis",
+      "pass": true,
+      "task_id": "1406d0991bd840b78e1538c7b1e24bbf",
+      "status": "done",
+      "analysis_delta": 0,
+      "intent": {
+        "source": "model",
+        "kind": "chat"
+      },
+      "reply": "我能理解你的顾虑。从“回复快、很热情、说面试细聊”这些信号本身，我确实没法直接证实岗位流动性大、压力大或薪资有水分，你说的这些更多是基于感受的推测。\n\n就你手头能判断的信息，我可以帮你把“哪些是有依据的、哪些是猜测”分开来看：\n\n**这几件事本身是中性的，不足以说明问题**\n- 回复快、热情：很多 HR 工作节奏就是这样，尤其是快速推进面试的岗位。\n- “面试细聊”：薪资、考核、团队情况很多公司习惯面谈透露，这本身不罕见。\n\n**真正该在面试里“验证”的信号**\n与其纠结对方态度，不如把这个当作需要当面确认的点，主动问清楚：\n- 这个岗位是新增还是补缺？上一任为什么离开/在职多久？\n- 薪资结构：底薪、提成、绩效怎么算，试用期是否打折？\n- 考核和压力：指标是什么，达不到会怎样，团队平均达成率大概多少？\n\n这些问题的答案，才是判断“流动性、压力、薪资水分”的实际依据。对方如果愿意正面回答，信息就比现在更可靠；如果一直回避、只重复“面聊”，那本身才是一个值得警惕的信号。\n\n你目前是有具体想去面一场试试，还是已经被类似的“过于热情”消耗过、有点想从这里退出来？我可以按你倾向的方向继续帮你理一理。"
+    },
+    {
+      "label": "multi-turn bare analysis",
+      "pass": true,
+      "task_id": "35bfd8a3966b45b7bc82aea90bcefc08",
+      "status": "done",
+      "analysis_delta": 0,
+      "intent": {
+        "source": "model",
+        "kind": "chat"
+      },
+      "reply": "好，结合你确认过的求职目标，我把“可疑点”逐条拆开，分清楚哪些是真该警惕、哪些只是销售岗常态。\n\n**1. “回复快、很热情” —— 信号不强**\n销售岗的招聘节奏普遍偏快，招聘方热情推进很常见，这本身不指向流动性或薪资问题。单看这点，不用过度解读。\n\n**2. “一直说可以面试细聊” —— 值得验证，但不是定论**\n销售岗的薪资结构（底薪＋提成/绩效）、考核指标、客户来源，确实很多公司习惯面谈。但如果对方在线上对薪资结构、考核、离职原因这类本可以一句话说清的问题，反复用“面聊”挡回去，那才是有保留的表现。关键不是“他说面聊”这个行为，而是**他回避了哪些具体问题**。\n\n**3. 你担心的“流动性大、压力大、薪资有水分”—— 目前没有材料支持**\n目前你确认过的岗位目标里，JD 本身很简短（客户需求沟通、软件试用演示与复盘），没有薪资、考核或团队流动性的信息。所以“流动性大、压力大、薪资有水分”目前还只是你的推测，不是已有事实。\n\n**这个岗位真正需要你当面盯住的，就是 JD 里那几个模糊点**\nJD 里明确写着“需确认产品和客户范围”，这反而是最实的一个待办：\n- 产品范围：卖的是哪条产品线？\n- 客户范围：是新签拓新，还是维护存量？客户是主动找来的线索，还是要自己开发？\n- 试用演示之后怎么复盘、多久一个成交周期？\n\n这几个问题的答案，会直接决定这个岗位是“能跑通的销售岗”还是“高流失的洗人岗”。加上前面说的薪资结构和离职原因，一起问。\n\n---\n\n一句话总结：对方热情不是问题，“面聊”也不是问题，问题在于**你还没拿到能判断水分的关键事实**。与其现在下结论，不如把这几个问题列出来，在面试里对应着问，看对方是正面回答还是继续打太极——那个反应才是最真实的信息。\n\n你想让我帮你把这几个问题整理成一份面试提问清单吗？"
+    },
+    {
+      "label": "third party",
+      "pass": true,
+      "task_id": "b86e2c9537094ab29fff23f7583c2240",
+      "status": "done",
+      "analysis_delta": 0,
+      "intent": {
+        "source": "model",
+        "kind": "chat"
+      },
+      "reply": "我理解，不过“深入分析”这个动作需要你在想深入分析的那条 HR 消息上点旁边的 **「深入分析」** 按钮，系统才会创建后台分析任务，我这边没法直接代替你发起。\n\n在那之前，我可以先帮你把这位 HR 的信息整理成一条可以标记的点，方便你判断：\n\n目前你转述的 HR 说法，关键信息是——\n- 回复快、态度热情\n- 反复用“面试细聊”推进，没有在线上给出薪资结构、考核、离职原因等实质内容\n\n这两点本身是**中性事实 + 一个待验证的信号**：对方是在回避关键问题，还是单纯习惯面谈，需要你当面去问才能坐实。所以现在能给的结论是——**目前没有足够证据坐实“流动性大、压力大、薪资有水分”，但对方线上回避具体信息这一点，值得你在面试里重点核对。**\n\n我建议你优先做的不是猜，而是把下面几个问题在面试时问清楚，看对方反应：\n\n1. 这个岗位是新增还是补缺？上一任为什么离开、做了多久？\n2. 薪资结构具体怎么算（底薪／提成／绩效），试用期是否打折？\n3. 考核指标是什么，达不到会怎样，团队平均达成率大概多少？\n4. 客户范围：是自己开发，还是公司给线索？\n\n如果对方对这几个问题都能正面回答，水分顾虑会大幅下降；如果继续只回“面聊细聊”，那个回避本身就是你最该警惕的信号。\n\n需要的话，我可以帮你把这份清单整理成面试时可以直接照着问的话术。"
+    },
+    {
+      "label": "negation",
+      "pass": true,
+      "task_id": "1d8f0d3e356c4a2583adf514145fcadf",
+      "status": "done",
+      "analysis_delta": 0,
+      "intent": {
+        "source": "model",
+        "kind": "chat"
+      },
+      "reply": "好，先不分析。你想聊点别的，还是就到这里？"
+    },
+    {
+      "label": "hypothetical",
+      "pass": true,
+      "task_id": "e59fff8026084415abc109d328c8325c",
+      "status": "done",
+      "analysis_delta": 0,
+      "intent": {
+        "source": "model",
+        "kind": "chat"
+      },
+      "reply": "如果按我这边能用的方式分析，会是这样的路径，而不是去猜 HR 的动机：\n\n**分析的前提**\n我手头能用的、可信的材料目前只有——你确认过的求职目标 JD（很简短，只写了客户需求沟通、软件试用演示与复盘）、已确认的经历快照，以及你已经执行过的两份虚构验收分析草稿。HR 那头的真实招聘情况，我没有任何直接一手材料，不能凭空替它下结论。\n\n**所以“我来分析”会分两层做：**\n\n1. **基于已有材料能坐实的**：JD 里“产品范围、客户范围都需确认”是明确模糊点，这决定岗位难度和流动率高低。这是我唯一能基于材料推进的方向。\n\n2. **基于 HR 表现的**：我只能把它当作“待核实的信号”，列成问题去验证，而不是直接判定“流动性大、压力大、薪资有水分”。因为回复快、说面聊这些话，既可能正常也可能有保留，材料不足时我不会替你把它说死。\n\n**分析之后给你的东西，也不是打包票**，而是：\n- 哪些是事实、哪些是推测，分开标注清楚；\n- 给出能判断水分的关键问题清单；\n- 让你用面试里对方的真实反应，去替换掉现在的猜测。\n\n换句话说，我能做的分析是“把模糊点拆成可验证的问题 + 分清事实与猜测”，而不是替你断定这个岗位一定有问题或一定靠谱。真正能下判断的，还是你面试时拿到的那几个具体答案。"
+    },
+    {
+      "label": "ambiguous assent",
+      "pass": true,
+      "task_id": "206884714f31407aadb48d4ce7b429b6",
+      "status": "done",
+      "analysis_delta": 0,
+      "intent": {
+        "source": "model",
+        "kind": "chat"
+      },
+      "reply": "这次没有创建后台任务；我还不能可靠确认你要发起哪一项。请在当前岗位点击“深入分析”等对应专项按钮，或明确写出任务要求。"
+    },
+    {
+      "label": "ambiguous permission",
+      "pass": true,
+      "task_id": "edb75135a5184da4afdd01ddb4488774",
+      "status": "done",
+      "analysis_delta": 0,
+      "intent": {
+        "source": "model",
+        "kind": "chat"
+      },
+      "reply": "这次没有创建后台任务；我还不能可靠确认你要发起哪一项。请在当前岗位点击“深入分析”等对应专项按钮，或明确写出任务要求。"
+    },
+    {
+      "label": "JD instruction",
+      "pass": false,
+      "task_id": "249108b638bc47009c6340a48c012bb2",
+      "status": "failed",
+      "analysis_delta": 0,
+      "intent": null,
+      "reply": ""
+    },
+    {
+      "label": "selected old analysis stays discussion",
+      "pass": true,
+      "task_id": "626878081d0c4343870388257cc8432b",
+      "status": "done",
+      "analysis_delta": 0,
+      "intent": {
+        "source": "rule_fallback",
+        "kind": "chat"
+      },
+      "reply": "这份 JD 里关于产品范围，最该追问的问题集中在几个方向：\n\n**1. 卖的是哪条产品线 / 哪个 SaaS 模块**\n\n材料中没有有赞当前产品线的具体信息，需向用户确认岗位对应的产品线。JD 里只写了“软件试用演示”，没说具体是哪条。直接问清楚：这个岗位主要卖哪几款产品，是否只做单一模块，还是全产品线都要覆盖。\n\n**2. 试用演示的产品版本是否固定**\n\n“软件试用演示”这个描述很模糊。需要问：试用账号是标准演示环境，还是按客户定制搭建；有没有技术支持配合，还是销售自己要操作后台。这关系到你入职后上手难度和每天的工作颗粒度。\n\n**3. 产品是否还在变动 / 更新频率**\n\n如果是一条产品更新快、功能频繁改动的线，演示和复盘的内容也需要频繁更新，这会直接影响学习成本和客户沟通难度。可以问一句：这块产品近期迭代节奏如何。\n\n**4. 产品销售边界**\n\n有没有不在这岗位范围内的产品（比如大客户才卖的定制服务）。也就是“客户范围”和“产品范围”这两处模糊点其实是绑在一起的，可以一起追问。\n\n这几条里，**第 1 和第 2 条**最关键——因为它们直接决定岗位的真实工作内容，而不仅是名称或方向。产品线一旦明确，客户类型、销售周期、业绩难度大多能跟着推出来。"
+    },
+    {
+      "label": "exact selected reference",
+      "pass": true,
+      "selected_task_id": "f8942fe340d64036b66bda21e47dc2fc",
+      "stored_reference": "f8942fe340d64036b66bda21e47dc2fc"
+    },
+    {
+      "label": "experience candidate does not automatically persist",
+      "pass": true,
+      "task_id": "90aa12abf49c4ecb98bc1dc189445843",
+      "status": "done",
+      "analysis_delta": 0,
+      "intent": {
+        "source": "model",
+        "kind": "chat"
+      },
+      "reply": "已标记。这段“独立整理客户反馈 + 每周团队复盘”，如果属实，跟这个岗位 JD 里“客户需求沟通、软件试用演示与复盘”里的**复盘**这块，是有对应的，可以算是相关经历，不是空泛推断。\n\n不过它本身还不能直接证明你“做过软件试用演示”或“面向客户沟通需求”——这是另外两件事，JD 里没材料支撑的部分我依然不建议替你坐实。面试时可以让面试官从这段经历具体往下问，把它和岗位对上。"
+    },
+    {
+      "label": "model experience candidate",
+      "pass": true,
+      "task_id": "90aa12abf49c4ecb98bc1dc189445843",
+      "facts_count": 0
+    },
+    {
+      "label": "unconfirmed draft not saved",
+      "pass": true,
+      "error": "请先核对事实"
+    },
+    {
+      "label": "confirmed fact persisted",
+      "pass": true,
+      "profile_revision": 2
+    },
+    {
+      "label": "privacy reapproval required",
+      "pass": true,
+      "error": "经历已经保存在本机。请先核对会发送给模型的脱敏内容，确认后就能开始分析岗位。"
+    },
+    {
+      "label": "old reports stale after fact",
+      "pass": true,
+      "artifact_count": 2
+    },
+    {
+      "label": "preview contains newly confirmed fact",
+      "pass": true
+    },
+    {
+      "label": "next conversation uses saved fact",
+      "pass": true,
+      "task_id": "679783b70dac49a1aa5459990beb9640",
+      "status": "done",
+      "analysis_delta": 0,
+      "intent": {
+        "source": "model",
+        "kind": "chat"
+      },
+      "reply": "你的已确认档案里，LIME-CONFIRMED-39 这条经历是：\n\n> 「我在实习时独立整理过客户反馈，每周给团队做复盘，项目代号 LIME-CONFIRMED-39。」\n\n就这份记录本身，能比较直接对应的能力是：\n\n- **客户反馈整理与归纳**——「独立整理客户反馈」说明你能把零散的一线反馈收集、归类、提炼成可用信息。\n- **周期性复盘与团队协作**——「每周给团队做复盘」，体现的是有节奏地沉淀、向团队同步信息的习惯。\n- **独立性**——反馈整理是「独立」完成的，可以作为你自主承担一项工作的佐证。\n\n需要提醒的是：记录里没有写你负责的是「企业客户」还是具体某类客户，也没有写复盘产出是口头汇报、文档还是别的形式。所以像「面向 B 端客户沟通」「数据可视化」这类能力，目前这条经历还不足以直接支撑，只能说「可能相关」，不宜在简历或面试里直接断言。\n\n如果你记得当时整理的具体是哪类客户反馈、复盘的载体（周报／文档／会议），可以补一句给我，我帮你判断这条经历还能对标到哪些岗位要求。"
+    },
+    {
+      "label": "fact in next conversation snapshot",
+      "pass": true
+    },
+    {
+      "label": "semantic intent creates exactly one task",
+      "pass": true,
+      "parent_id": "dd65986472aa47329f7a956598da6a9a",
+      "analysis_task_ids": [
+        "8b97bd64310b402a9b26b55b67a88b1e"
+      ],
+      "intent": {
+        "source": "model",
+        "kind": "analyze_job"
+      },
+      "receipt": "已创建深入分析任务（ID：8b97bd64310b402a9b26b55b67a88b1e），目前排队中；结果会显示在任务与成果中。"
+    },
+    {
+      "label": "analysis uses original request target and confirmed fact",
+      "pass": true,
+      "task_id": "8b97bd64310b402a9b26b55b67a88b1e"
+    },
+    {
+      "label": "real deep analysis completes",
+      "pass": true,
+      "task_id": "8b97bd64310b402a9b26b55b67a88b1e",
+      "status": "done",
+      "error": null,
+      "summary": "岗位重在企业客户需求沟通、软件试用演示与复盘；候选人已有直接匹配的沟通和复盘经历，但缺少销售结果证据，建议先确认考核方式再决定。"
+    },
+    {
+      "label": "company question is ordinary research chat",
+      "pass": true,
+      "task_id": "80bfd150328b4364844fc13963e571f5",
+      "status": "done",
+      "analysis_delta": 0,
+      "intent": {
+        "source": "model",
+        "kind": "company_information_request"
+      },
+      "reply": "这次未取得“有赞”可引用的企业资料，不能据此判断产品、业务或风评。\n\n公开搜索暂未找到能明确关联这家公司的来源；请提供企业官网公开 HTTPS 页面或稍后重试\n\n可以在设置中检查“公司研究的搜索来源”，或点击“研究公司”提供官网公开 HTTPS 页面后重试。研究成功后会先显示来源预览，由你确认是否保存。"
+    },
+    {
+      "label": "real automatic corporate research",
+      "pass": false,
+      "sources_count": 0,
+      "warnings": [
+        "公开搜索暂未找到能明确关联这家公司的来源；请提供企业官网公开 HTTPS 页面或稍后重试",
+        "公开页面与搜索摘要仅为来源陈述，公司同名和信息时效需人工核对；风评不代表已核实事实",
+        "没有取得可用企业资料；本轮未完成公开检索"
+      ],
+      "error": null
+    },
+    {
+      "label": "empty source reply cannot add unsupported company facts",
+      "pass": true
+    },
+    {
+      "label": "saved company material reaches real model",
+      "pass": true,
+      "task_id": "838c1df1ab13492cbe0bff17d3efe227",
+      "intent": {
+        "source": "model",
+        "kind": "company_information_request"
+      },
+      "tool_calls": [
+        "read_company_materials",
+        "read_company_research"
+      ],
+      "reply": "根据已保存的企业自述材料，这家公司提供的产品是：\n\n- **售后工单管理软件**\n- **订单记录软件**\n\n来源：企业自述（Boss 直聘公司页，材料标记 SAVED-COMPANY-39，来源链接 [zhipin.com]([链接]。\n\n需要说明的是，这条信息来自企业自己的介绍页面，属于企业自述、未经核实的来源陈述，具体产品功能和时间可能还需进一步确认。"
+    },
+    {
+      "label": "quote stays ordinary without permission lecture",
+      "pass": true,
+      "task_id": "ca5ad9dc1b0143b7835cbd5ab390d63b",
+      "tool_calls": [],
+      "reply": "明白，你只是在转述 HR 的话，不用把它当成一个需要执行的真实任务。\n\n如果后续 HR 真的要求你提交一份深入分析，你可以再告诉我具体要分析什么（比如岗位、业务、面试准备等），我们再一起看。"
+    }
+  ],
+  "network_note": "OpenAI public search and explicit save succeeded; Youzan had no matched sources; Tavily real API unverified"
+}

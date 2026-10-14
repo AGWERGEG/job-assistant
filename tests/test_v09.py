@@ -1,3 +1,4 @@
+from app.version import EXTENSION_ID
 import json
 import tempfile
 import threading
@@ -88,11 +89,11 @@ class V09Tests(unittest.TestCase):
         server=make_server(self.tmp.name,0);thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
         self.addCleanup(server.server_close);self.addCleanup(server.shutdown)
         base='http://127.0.0.1:'+str(server.server_port)
-        token=json.load(urllib.request.urlopen(base+'/api/session'))['token']
+        token=server.session_token
         def post(path,headers):
             return urllib.request.urlopen(urllib.request.Request(base+path,b'{}',{'Content-Type':'application/json',**headers}))
         with self.assertRaises(urllib.error.HTTPError):post('/api/retrospective',{})
-        with self.assertRaises(urllib.error.HTTPError):post('/bridge/blessing',{'Origin':'chrome-extension://'+'a'*32})
+        with self.assertRaises(urllib.error.HTTPError):post('/bridge/blessing',{'Origin':'chrome-extension://'+EXTENSION_ID})
         with self.assertRaises(urllib.error.HTTPError) as error:post('/api/retrospective',{'X-Local-Token':token})
         self.assertEqual(error.exception.code,410)
 

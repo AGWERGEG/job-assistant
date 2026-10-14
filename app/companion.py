@@ -12,8 +12,17 @@ PERSONAS = {
     "gentle": {"title": "温柔搭子", "hello": "我是你的 AI 求职搭子。先从一个岗位、一件小事开始，我陪你一起理清楚。", "prompt": "温和、具体，先接住感受再给一个可执行的小步骤。不空泛鼓励，不保证录用。"},
     "direct": {"title": "直球搭子", "hello": "我是你的 AI 求职搭子。机会一起挑，材料一起改，有疑虑我们直接说清楚。", "prompt": "直接、坦诚、有分寸。先说判断再说理由，不讽刺、不说教，不把资料缺失当能力不足。"},
 }
-DEFAULTS = {"persona": "gentle", "buddy_name": "小伴", "user_name": "", "stage": "应届生", "private_terms": "", "provider": "codex", "base_url": "", "api_model": "", "api_key": "", "json_mode": True, "privacy_approved": "", "onboarded": False,
-            "guide_connection_ready": False, "guide_persona_ready": False, "guide_job_id": "", "guide_first_task_id": "", "guide_review_task_id": "", "guide_completed": False, "guide_version": ""}
+DEFAULTS = {"search_provider":"public", "search_api_key":"", "dialogue_agent": True, "persona": "gentle", "buddy_name": "小伴", "user_name": "", "stage": "应届生", "private_terms": "", "provider": "codex", "base_url": "", "api_model": "", "api_key": "", "connections": [], "task_models": {}, "json_mode": True, "stream": True, "stream_verified": False, "privacy_approved": "", "onboarded": False,
+            "guide_connection_ready": False, "guide_persona_ready": False, "guide_profile_skipped": False, "guide_job_id": "", "guide_first_task_id": "", "guide_review_task_id": "", "guide_completed": False, "guide_version": ""}
+
+
+def explicit_deep_analysis_request(text):
+    """Recognize a standalone request for an in-depth analysis of the current job."""
+    return bool(re.fullmatch(
+        r'\s*(?:(?:请|麻烦)(?:你|帮我)?|帮我|给我)?\s*'
+        r'(?:深入|深度|详细|全面|完整)(?:地)?(?:分析|拆解|评估)'
+        r'(?:一下|下)?(?:这个|该|当前|这份)?(?:岗位|职位|工作|机会)?'
+        r'(?:吧|呀|呗|好吗|可以吗)?[。！!？?\s]*', text))
 
 
 class Companion:
@@ -29,8 +38,22 @@ class Companion:
         if not stored.get("guide_version") and value.get("onboarded"):
             value["guide_completed"] = True
         if public:
+            secrets = [value.get("api_key", ""), value.get("search_api_key", "")] + [c.get("api_key", "") for c in value.get("connections", [])]
             value["guide"] = self.onboarding_state(value)
-            value["has_api_key"] = bool(value.pop("api_key", ""))
+            # Leaving the tutorial is not permission to send profile data to a
+            # model. Give every UI the same actionable, non-sensitive reason.
+            value["readiness"] = self.readiness_state(value)
+            secret = value.pop("api_key", "")
+            value["has_api_key"] = bool(secret)
+            value["has_search_api_key"] = bool(value.pop("search_api_key", ""))
+            for key in ("base_url", "api_model"):
+                if any(item and item in str(value.get(key, "")) for item in secrets):
+                    value[key] = "（已隐藏）"
+            from .model_connections import public_connections, public_task_models
+            safe_connections = public_connections(value)
+            safe_task_models = public_task_models(value)
+            value["connections"] = safe_connections
+            value["task_models"] = safe_task_models
             value.pop("privacy_approved", None)
             value["personas"] = PERSONAS
         return value
@@ -50,7 +73,7 @@ class Companion:
             return {"active": True, "step": "connection", "job": None}
         if not settings.get("guide_persona_ready"):
             return {"active": True, "step": "persona", "job": None}
-        if not profile.strip():
+        if not profile.strip() and not settings.get('guide_profile_skipped'):
             return {"active": True, "step": "profile", "job": None}
         if not self.ready():
             return {"active": True, "step": "privacy", "job": None}
@@ -89,6 +112,9 @@ class Companion:
                 if settings["persona"] not in PERSONAS or not settings["buddy_name"]:
                     raise Problem("请先选择角色并填写搭子称呼")
                 settings["guide_persona_ready"] = True
+                settings.pop("guide_view", None)
+            elif action == "blank-profile":
+                settings["guide_profile_skipped"] = True
                 settings.pop("guide_view", None)
             elif action == "review-task":
                 task_id = text_field(value.get("task_id", ""), "引导任务", 100, True)
@@ -158,9 +184,32 @@ class Companion:
         with self.store.connect() as db:
             return dict(db.execute("SELECT * FROM profile WHERE id=1").fetchone())
 
+    def readiness_state(self, settings=None, profile=None):
+        """Explain what remains before model work, without returning profile text or secrets."""
+        settings = settings if settings is not None else self.settings()
+        profile = profile if profile is not None else self.profile()
+        if not profile.get("facts", "").strip() and not settings.get('guide_profile_skipped'):
+            return {
+                "state": "profile_required",
+                "title": "还差一步：补充你的经历",
+                "copy": "模型接入和侧栏连接会保留。先在本机补充经历，搭子才知道怎样帮你看岗位。",
+                "action_label": "去工作台补充档案",
+                "page": "profile",
+            }
+        if settings.get("privacy_approved") != fingerprint(profile, settings) or not settings.get("onboarded"):
+            return {
+                "state": "privacy_required",
+                "title": "还差一步：确认脱敏档案",
+                "copy": "经历已经保存在本机。请先核对会发送给模型的脱敏内容，确认后就能开始分析岗位。",
+                "action_label": "去工作台核对脱敏",
+                "page": "profile",
+            }
+        if not profile.get('facts','').strip():
+            return {"state": "profile_optional", "title": "空白档案模式：先看岗位", "copy": "本轮只根据岗位 JD 判断工作内容、门槛和风险；补充真实经历后才能生成简历、HR 招呼或个人匹配建议。", "action_label": "去档案补充经历", "page": "profile"}
+        return {"state": "ready", "title": "可以开始", "copy": "", "action_label": "", "page": "chat"}
+
     def ready(self):
-        settings = self.settings()
-        return bool(settings["onboarded"] and settings["privacy_approved"] == fingerprint(self.profile(), settings))
+        return self.readiness_state()["state"] in ("ready", "profile_optional")
 
     def save_settings(self, value):
         require_object(value)
@@ -185,6 +234,77 @@ class Companion:
                         settings[key] = item
             if value.get("clear_api_key") is True:
                 settings["api_key"] = ""
+            if 'search_provider' in value:
+                if value['search_provider'] not in ('public','tavily'):
+                    raise Problem('公开搜索来源无效')
+                settings['search_provider'] = value['search_provider']
+            if 'search_api_key' in value:
+                search_key = text_field(value['search_api_key'], '搜索密钥', 1000)
+                if search_key:
+                    settings['search_api_key'] = search_key
+            if value.get('clear_search_api_key') is True:
+                settings['search_api_key'] = ''
+            if "connections" in value:
+                from .model_connections import INTENTS
+                incoming = value["connections"]
+                if not isinstance(incoming, list) or len(incoming) > 20:
+                    raise Problem("连接列表无效")
+                old_by_id = {c.get("id"): c for c in settings.get("connections", []) if isinstance(c, dict)}
+                connections, seen = [], set()
+                for raw in incoming:
+                    if not isinstance(raw, dict):
+                        raise Problem("连接配置无效")
+                    cid = text_field(raw.get("id", ""), "连接编号", 64, True)
+                    if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", cid) or cid in seen:
+                        raise Problem("连接编号无效或重复")
+                    seen.add(cid)
+                    name = text_field(raw.get("name", ""), "连接名称", 60, True)
+                    base_url = text_field(raw.get("base_url", ""), "兼容地址", 1000, True).rstrip("/")
+                    validate_url(base_url)
+                    model = text_field(raw.get("api_model", ""), "模型名称", 200)
+                    old = old_by_id.get(cid, {})
+                    old_url = str(old.get("base_url", "")).rstrip("/")
+                    key = text_field(raw.get("api_key", ""), "API密钥", 1000)
+                    if not key and old_url == base_url:
+                        key = old.get("api_key", "")
+                    if key and any(key in item for item in (name, base_url, model)):
+                        raise Problem("连接名称、地址或模型字段不能包含 API 密钥")
+                    connections.append({"id": cid, "name": name, "base_url": base_url,
+                                        "api_model": model, "api_key": key,
+                                        "json_mode": raw.get("json_mode", True) is True,
+                                        "stream": raw.get("stream", True) is True,
+                                        "stream_verified": False})
+                settings["connections"] = connections
+            if "task_models" in value:
+                from .model_connections import INTENTS
+                task_models = value["task_models"]
+                if not isinstance(task_models, dict):
+                    raise Problem("任务模型指派无效")
+                valid_ids = {c["id"] for c in settings.get("connections", [])}
+                normalized = {}
+                previous_models = settings.get("task_models", {})
+                requires_confirmation = False
+                for intent, assignment in task_models.items():
+                    if intent not in INTENTS:
+                        raise Problem("任务模型用途无效")
+                    if not isinstance(assignment, dict):
+                        raise Problem("任务模型指派无效")
+                    cid = text_field(assignment.get("connection_id", ""), "连接编号", 64)
+                    model = text_field(assignment.get("model", ""), "模型名称", 200)
+                    if cid:
+                        if cid not in valid_ids or not model:
+                            raise Problem("请选择有效连接并填写模型名称")
+                        selected = next(c for c in settings.get("connections", []) if c["id"] == cid)
+                        if not selected.get("base_url") or not selected.get("api_key"):
+                            raise Problem("任务指派连接需要先保存地址和密钥")
+                        if selected.get("api_key") and selected["api_key"] in model:
+                            raise Problem("模型名称不能包含 API 密钥")
+                        normalized[intent] = {"connection_id": cid, "model": model}
+                        if previous_models.get(intent) != normalized[intent]:
+                            requires_confirmation = True
+                if requires_confirmation and value.get("task_models_confirmed") is not True:
+                    raise Problem("请先确认这些任务会把必要的脱敏职业信息发送到所选连接")
+                settings["task_models"] = normalized
             for key, allowed in (("persona", PERSONAS), ("provider", ("codex", "api"))):
                 if key in value:
                     if value[key] not in allowed:
@@ -192,9 +312,14 @@ class Companion:
                     settings[key] = value[key]
             if not settings["buddy_name"]:
                 raise Problem("请给搭子一个称呼")
+            if 'dialogue_agent' in value: settings['dialogue_agent'] = value['dialogue_agent'] is True
             if "json_mode" in value:
                 settings["json_mode"] = value["json_mode"] is True
-            if 'stream' in value:settings['stream']=value['stream'] is True
+            if 'stream' in value:
+                requested=value['stream'] is True
+                if requested != settings.get('stream', True): settings['stream_verified']=False
+                settings['stream']=requested
+            if 'stream_verified' in value:settings['stream_verified']=value['stream_verified'] is True
             if 'celebrations' in value:settings['celebrations']=value['celebrations'] is True
             if settings["base_url"]:
                 validate_url(settings["base_url"])
@@ -220,7 +345,7 @@ class Companion:
             expected = fingerprint(profile, settings)
             if value.get("token") != expected or value.get("confirmed") is not True:
                 raise Problem("档案已变化，请重新预览并确认", 409)
-            if not profile["facts"].strip():
+            if not profile["facts"].strip() and not settings.get('guide_profile_skipped'):
                 raise Problem("先填写或上传简历经历")
             if not settings.get("guide_version"):
                 if was_onboarded:
@@ -236,6 +361,15 @@ class Companion:
         with self.store.connect() as db:
             rows = db.execute("SELECT t.* FROM messages m JOIN tasks t ON t.id=m.task_id WHERE m.job_id=? ORDER BY m.created DESC LIMIT 60", (job_id,)).fetchall()
             versions = [dict(r) for r in db.execute("SELECT id,task_id,created FROM resume_versions WHERE job_id=? ORDER BY created DESC", (job_id,))]
+            all_tasks = db.execute("SELECT id,kind,created FROM tasks WHERE job_id=? ORDER BY created,id", (job_id,)).fetchall()
+        from .task_labels import display_name
+        counters = {}
+        display_names = {}
+        for item in all_tasks:
+            if item['kind'] not in ('tailor_resume', 'analyze_job', 'quick_analysis', 'interview_prep', 'interview_review', 'suggest_reply'):
+                continue
+            counters[item['kind']] = counters.get(item['kind'], 0) + 1
+            display_names[item['id']] = display_name(item['kind'], counters[item['kind']])
         turns = []
         for row in reversed(rows):
             task = self.store.decode_task(row)
@@ -249,44 +383,72 @@ class Companion:
                 from .company import Company
                 background=Company(self.store).read(job_id)
                 if background and result.get('company_revision',0)!=background['revision']:stale=True
-            turns.append({"task_id": task["id"], "kind": task["kind"], "text": task["context"].get("instruction", ""),
+            turns.append({"task_id": task["id"], "kind": task["kind"], "display_name": display_names.get(task['id'], ''), "text": task["context"].get("instruction", ""),
                           "status": task["status"], "created": task["created"], "updated": task["updated"], "error": task.get("error_text"),
-                          "reply": result.get("primary_output") or result.get("summary", ""), "partial":task.get('partial_text','') if task['status']=='running' else '', "stale": stale,
+                          "attempts": task.get("attempts", 0),
+                          "fact_candidate": result.get("fact_candidate") is True,
+                          "reply": result.get("primary_output") or result.get("summary", ""),
+                          "primary_output": result.get("primary_output", ""),
+                          "result_markdown": result.get("markdown") or result.get("primary_output") or result.get("summary", "") if task_lane(task["kind"]) == "background" else "",
+                          "partial":task.get('partial_text','') if task['status']=='running' else '', "stale": stale,
                           "workbench": task_lane(task["kind"]) == 'background', "metrics": task.get("metrics", {})})
         settings = self.settings()
+        from .artifacts import list_artifacts
+        artifacts = list_artifacts(self.store, job_id, limit=20, include_result=True)
         # Extension history never receives raw profile, local source text, or secrets.
-        return redact({"turns": turns, "versions": versions}, [self.profile().get("name", ""), settings["user_name"]], terms_from(settings))
+        safe = redact({"turns": turns, "versions": versions, "artifacts": artifacts},
+                      [self.profile().get("name", ""), settings["user_name"]], terms_from(settings))
+        # These IDs are locally generated references, not free-form text.
+        # Redacting a long digit run inside one would make the UI send a
+        # nonexistent task ID when the user opens or cites a result.
+        for item, original in zip(safe['turns'], turns):
+            item['task_id'] = original['task_id']
+        for item, original in zip(safe['versions'], versions):
+            item['id'] = original['id']
+            item['task_id'] = original['task_id']
+        for item, original in zip(safe['artifacts'], artifacts):
+            item['task_id'] = original['task_id']
+        return safe
 
-    def send(self, value):
+    def send(self, value, *, target_client=None):
         if not self.ready():
-            raise Problem("请先到工作台完成认识搭子和脱敏档案确认", 409)
+            readiness = self.readiness_state()
+            raise Problem(readiness.get('copy') or readiness['title'], 409)
         kind = value.get("kind", "companion_chat")
         if kind not in TASK_KINDS or kind == 'closing_message':
             raise Problem("对话动作无效")
-        message = text_field(value.get("text", ""), "消息", 6000)
+        # The persistence layer accepts 5000 characters; keep the UI/API
+        # validation aligned so a message is never accepted here and rejected
+        # while creating its task snapshot.
+        message = text_field(value.get("text", ""), "消息", 5000)
         defaults = {"quick_analysis": "帮我快速看看这个岗位值得尝试吗？", "analyze_job": "请深入分析这个岗位。", "tailor_resume": "帮我针对这个岗位优化简历。", "suggest_reply": "帮我写一条联系 HR 的招呼。"}
         defaults['interview_prep'] = '请结合这个岗位、公司资料和我的真实经历，准备一张面试逻辑卡。轮次和形式暂未补充，请说明假设。'
         defaults['rest_message'] = '今天先休息，结束这一轮找工作。请留给我一段简短寄语，不再安排任务。'
         message = message or defaults.get(kind, "")
         if not message:
             raise Problem("先跟搭子说点什么")
+        if not value.get('job_id') and (kind in ('quick_analysis', 'analyze_job', 'tailor_resume',
+                                                 'suggest_reply', 'interview_prep', 'interview_review')
+                                         or explicit_deep_analysis_request(message)):
+            raise Problem('请先选择岗位，再发起这项专业任务', 409)
         if kind == 'interview_review' and len(message.strip()) < 12:
             raise Problem('请至少写下一个实际面试问题、你的回答或卡住的地方，再一起复盘')
         from .closing import declares_joined
         if kind == 'companion_chat' and declares_joined(message):
             kind = 'closing_message'
-        if kind == 'companion_chat' and value.get('job_id'):
-            # Route only explicit action requests, not statements about feelings
-            # or quotations such as “HR 让我改简历”. Everything else stays chat.
-            if re.match(r'^(?:请|帮我|请帮我)(?:针对这个岗位|针对该岗位)?(?:优化|修改|改一下|改写|改)简历', message):
-                kind = 'tailor_resume'
-            elif re.match(r'^(?:请|帮我|请帮我)(?:写|准备)(?:一条|个|一段)?(?:HR招呼|HR 招呼|招呼|开场白)', message):
-                kind = 'suggest_reply'
-            elif re.match(r'^(?:请|帮我|请帮我)(?:深入|深度)分析', message):
-                kind = 'analyze_job'
+        if (kind == 'companion_chat' and value.get('job_id') and not value.get('reference_task_id')
+                and not (self.settings()['provider'] == 'api' and self.settings().get('dialogue_agent', True))):
+            # Keep Codex and API-with-agent-disabled on the same conservative
+            # local fallback. API dialogue-agent turns still reach the model
+            # intent validator first; a selected result stays chat.
+            from .dialogue_intent import rule_fallback_kind
+            kind = rule_fallback_kind(message) or kind
         job_id = value.get("job_id", "")
-        task = self.store.create_task({"kind": kind, "job_id": job_id, "instruction": message, "companion": True,
-                                       "request_id": text_field(value.get("request_id", ""), "请求标识", 100, True)})
+        payload = {"kind": kind, "job_id": job_id, "instruction": message, "companion": True,
+                   "request_id": text_field(value.get("request_id", ""), "请求标识", 100, True)}
+        if value.get('reference_task_id'):
+            payload['reference_task_id'] = text_field(value.get('reference_task_id'), '引用任务', 100, True)
+        task = self.store.create_task(payload, target_client=target_client)
         if job_id:
             self.onboarding_first_task(job_id, task)
         return {"task": task, "job_id": job_id}

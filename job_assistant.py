@@ -3,7 +3,6 @@
 import argparse
 import base64
 import json
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -19,7 +18,7 @@ def read_json(path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="求职搭子本地工具 0.5.0")
+    parser = argparse.ArgumentParser(description="求职搭子本地工具")
     parser.add_argument("--data-dir", default=str(ROOT / "data"))
     commands = parser.add_subparsers(dest="command", required=True)
     serve = commands.add_parser("serve")
@@ -60,7 +59,8 @@ def main():
             return
         store = Store(args.data_dir)
         if args.command == "doctor":
-            codex = shutil.which("codex") or ("/Applications/ChatGPT.app/Contents/Resources/codex" if Path("/Applications/ChatGPT.app/Contents/Resources/codex").is_file() else None)
+            from app.runtime import find_codex
+            codex = find_codex()
             auth = {"ok": False, "message": "未找到 Codex CLI"}
             if codex:
                 try:
@@ -68,7 +68,7 @@ def main():
                     auth = {"ok": check.returncode == 0, "message": ((check.stdout or check.stderr).strip() or "状态未知")[-1000:]}
                 except Exception as exc:
                     auth = {"ok": False, "message": str(exc)}
-            result = {"version": "0.4.0", "python": sys.version.split()[0], "python_ok": sys.version_info >= (3, 10), "codex": codex, "codex_auth": auth, "data_dir": str(store.directory)}
+            result = {"version": json.loads((ROOT / "extension/manifest.json").read_text())["version_name"], "python": sys.version.split()[0], "python_ok": sys.version_info >= (3, 10), "codex": codex, "codex_auth": auth, "data_dir": str(store.directory)}
         elif args.command == "state":
             result = store.state()
         elif args.command == "tasks":

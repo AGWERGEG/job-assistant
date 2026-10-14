@@ -1,4 +1,28 @@
+# 当前 RC4.3.40
+
+先读 docs/CURRENT_HANDOFF.md 与 docs/RELEASE_100_RC4340.md。当前交付目标为 macOS Apple 芯片公开测试桌面包＋同版扩展；正式发布尚待用户验收。资料目录锁和所选成果引用必须保留。以下旧版条目保留为历史约束，不代表当前验收状态。
+
+2026-10-14 审阅修复见 docs/REVIEW_REPRO_FIX_20261014.md。当前源码已不同于 10 月 8 日 ZIP；用户随后授权封装“审阅修复”候选三包，版本号不变、未发布，详情见当前交接和归档封装报告。私有 API 读写都需授权，UI 使用 launch.py 的一次性启动链接；固定扩展 ID 与 nonce/HMAC 服务证明必须保留。Codex 路由使用保守本机授权，worker 环境/工具收紧，默认模型由 CLI 内置设置选择。新增修复须跑对应 tests/test_review_*.py；UI 仍跑 workspace/extension/chat_context。不得自动读取凭据、真实资料或更改用户运行目录。
+
+# 当前RC4.3.22
+
+先读docs/RELEASE_100_RC4322.md。共用extension/reply-format.js只建DOM文本，不使用innerHTML，复制保持原文。analysis_authorized接受本轮直接岗位分析请求，仍拒绝引用/否定/模糊应答。
+
+# 当前 RC4.3.21
+
+先读 docs/RELEASE_100_RC4321.md。兼容API普通聊天走 app/dialogue.py，Codex及其他任务保留原路径。资料按需读取、原始用户授权、事务建单、租约/隐私/目标检查必须保留。任务来源不是AI历史；无dialogue_source_task_id的任务不得标为earlier_user_turn。tests/test_dialogue*.py及RC/关联测试必跑。不可将测试包标为正式v1。
+
 # Job Assistant 工程约定
+
+当前 RC4.3.12 见 docs/RELEASE_100_RC4312.md。BOSS HR/JD 识别只在有限 DOM 范围内寻找头部与职位条，多候选必须拒绝；聊天正文和联系人列表不作为来源。真实 BOSS HR 头部末尾“在线/离线/更多”状态和操作词必须剥离；聊天消息不得作为会话候选来源。真实 BOSS 职位条可含图标、多层包裹或无“查看职位”；只能从最小薪资节点及有限相邻头部核验。真实 BOSS 头部末尾“更多”必须先剥离，再进行会话核验；不得把操作文字当企业或岗位。HR 提取必须限制在相邻的短头部与职位条，不能向整页或联系人列表借字段。已绑定不同岗位只显示明确切换按钮；同一岗位隐藏提示。关联管理放在 details-dialog 的高级设置，不能常驻聊天区。必跑 tests/test_chat_context.cjs 与原关联、工作台和 RC 检查。
+
+当前 RC4.3.7 启动修复见 docs/RELEASE_100_RC437.md。8421 被旧服务占用时，新版可在 8422—8430 启动，侧栏优先查找同版服务；同一数据目录不得由两个版本并发写入。不得自动结束用户现有服务。
+
+当前 RC4.3.6 岗位/HR 关联修复见 docs/RELEASE_100_RC436.md。BOSS 聊天 URL 由所有会话共用，禁止用 URL 单独匹配岗位。关联需要核对当前会话的招聘者、企业和岗位，旧 URL-only 记录只能标为待核验。不得随浏览静默切换对话目标；解绑只删除关联。新增表必须覆盖迁移、资料导出和清理。必跑 tests/test_blank_links.py、test_bridge.py、test_extension.cjs、test_workspace.cjs；合成页面通过不等于实站通过。用户正在使用的 Edge 页面不得为测试反复刷新或切换。
+
+当前 RC3 新增外部模拟面试闭环，见 docs/RELEASE_100_RC3.md。mock_interview_packages/results 独立存储，导出必须通过既有脱敏审核，导入必须先预览再确认并校验练习编号所属岗位；返回文本只作练习反馈，不能自动写入事实、模型上下文或真实面试统计。删除与资料副本必须包含两张新表。
+
+当前 v1.0 RC2 先读 docs/RELEASE_100_RC2.md。API 连接测试必须覆盖短对话的实际传输方式；stream_verified 为 false 时 worker 使用完整回复。慢请求在侧栏和工作台显示动态秒数，不能只显示静态“正在整理”。短对话墙钟上限 120 秒；不能把连接测试成功解释为模型一定快速。
 
 当前 v1.0 RC1 先读 README.md 与 docs/RELEASE_100_RC1.md。无变化 save_job 不递增 revision；侧栏 /sync 只同步已确认目标的本地岗位版本，不重新采集覆盖 JD。API 调用由 app/api_transport.py 子进程执行，父进程掌控总时限与取消；凭据/提示只能经 stdin，不放 argv/日志。tests/test_rc_transport.py 与 test_rc_release.py 是 RC 必跑检查。正式 v1 尚未批准，不能把 RC 包标为正式版。
 

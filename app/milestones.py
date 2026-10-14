@@ -1,5 +1,5 @@
 """Local companion moments and factual retrospectives. No model calls."""
-from datetime import datetime
+from datetime import datetime, timezone
 from .companion import Companion
 from .journey import Journey
 from .store import Problem
@@ -50,7 +50,7 @@ class Milestones:
         settings = Companion(self.store).settings()
         title = ('新的开始，祝你顺利' if success['kind'] == 'joined' else '恭喜，收到一个新的选择') if success else '我们一起走过的这段路'
         wish = BLESSINGS[settings['persona']][success['kind'] if success else 'step']
-        dates = (datetime.fromtimestamp(first).astimezone().strftime('%Y-%m-%d') + ' 至 ' + datetime.fromtimestamp(last).astimezone().strftime('%Y-%m-%d')) if times else '尚无记录'
+        dates = (datetime.fromtimestamp(first, timezone.utc).astimezone().strftime('%Y-%m-%d') + ' 至 ' + datetime.fromtimestamp(last, timezone.utc).astimezone().strftime('%Y-%m-%d')) if times else '尚无记录'
         note = '仅统计本机用户确认的进展及已验收简历；生成、复制和分析次数不算投递或发送。日期为记录时间，跨度从首条进展/验收版本到最后一条，不代表完整求职周期。同公司优先按BOSS公司ID去重，否则按已保存名称。'
         text = (f'{title}\n\n本机累计记录：{dates}\n'
                 f'投递 {summary["applications"]} 次，涉及 {summary["companies"]} 家公司\n'

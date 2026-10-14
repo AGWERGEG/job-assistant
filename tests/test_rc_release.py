@@ -1,3 +1,4 @@
+from app.version import EXTENSION_ID
 """Release smoke: real local HTTP, synthetic API, worker, export and restart."""
 import io
 import json
@@ -36,10 +37,10 @@ class ReleaseSmoke(unittest.TestCase):
                     threading.Thread(target=server.serve_forever,daemon=True).start()
                     return server
                 server=start()
-                origin='chrome-extension://'+'a'*32
-                token='';bridge_token=''
+                origin='chrome-extension://'+EXTENSION_ID
+                token=server.session_token;bridge_token=''
                 def req(path,value=None,extension=False):
-                    headers={}
+                    headers={'X-Local-Token':token}
                     if value is not None:headers={'Content-Type':'application/json','X-Local-Token':token}
                     if extension:headers.update(Origin=origin,**{'X-Bridge-Token':bridge_token})
                     with urllib.request.urlopen(urllib.request.Request(f'http://127.0.0.1:{server.server_port}'+path,
@@ -89,7 +90,7 @@ class ReleaseSmoke(unittest.TestCase):
                 synced=req('/bridge/sync',{'scope':'release','seq':1},True)
                 self.assertEqual(synced['job']['revision'],original['revision']+1)
                 stop(server);servers.remove(server);server=start()
-                token=req('/api/session')['token'];code=req('/api/extension-code',{})['code']
+                token=server.session_token;code=req('/api/extension-code',{})['code']
                 bridge_token=req('/bridge/pair',{'code':code},True)['token']
                 saved=req('/bridge/restore',{'scope':'restarted','seq':1},True)
                 self.assertEqual(saved['job']['id'],job['id'])

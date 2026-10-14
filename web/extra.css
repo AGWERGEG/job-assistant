@@ -13,6 +13,7 @@ dialog {width:min(760px,90vw);max-height:90vh;overflow:auto;border:1px solid #ca
 dialog::backdrop {background:#15332680;}
 #export-content {width:100%;min-height:300px;box-sizing:border-box;}
 #export-note {white-space:pre-line;}
+.resume-import-preview{border:1px solid var(--line);border-radius:14px;background:#f4f8f0;padding:16px;margin:0 0 18px}.resume-import-preview h3{margin:4px 0 8px}.resume-import-preview details{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0}.resume-import-preview pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:240px;overflow:auto}.resume-import-warning{color:#74533b;font-size:13px}.resume-import-preview button{margin:6px 6px 0 0}
 .export-actions {display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
 #moment-text {white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;line-height:1.9;}
 #interview-panel small {display:block;margin-top:12px;}
@@ -43,6 +44,14 @@ dialog::backdrop {background:#15332680;}
 .inbox-actions {display:flex;gap:16px;margin-top:12px;}
 #company-panel>summary {font-size:16px;}
 #company-panel .compact-help {color:#68796c;margin-bottom:14px;}
+#company-panel .company-research-open{margin-top:14px;}
+.company-research{border-top:1px solid #e3e9df;margin-top:14px;padding-top:14px;}
+.company-research h3,.company-research h4{margin:0 0 8px;}
+.company-research-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+.company-research-source{border:1px solid #dce5d9;background:#fff;padding:12px;border-radius:8px;margin-top:10px;}
+.company-research-source strong,.company-research-source small{display:block;}
+.company-research-source p{white-space:pre-wrap;line-height:1.55;margin:8px 0;}
+.company-research-source a{font-size:13px;}
 .company-group {border-top:1px solid #e3e9df;padding:11px 0;}
 .company-group>.company-material {margin-left:14px;}
 .company-material>summary {font-weight:550;}
@@ -97,7 +106,8 @@ body.first-use-mode[data-guide-step="privacy"] #setup .setup-grid>section:nth-ch
 body.first-use-mode[data-guide-step="connection"] #test-connection{display:none}
 body.first-use-mode[data-guide-step="pairing"] #extension-revoke{display:none}
 body.first-use-mode #screen-chat>*:not(#onboarding-flow){display:none}
-#extension-pairing{max-width:640px;margin:auto}#extension-pairing li{margin:10px 0}#pair-code{font:600 20px/1.6 monospace;overflow-wrap:anywhere;user-select:all}
+#extension-pairing{max-width:640px;margin:auto}.settings-shell #extension-pairing{max-width:none;margin:0}#extension-pairing li{margin:10px 0}#pair-code{font:600 20px/1.6 monospace;overflow-wrap:anywhere;user-select:all}
+.pair-request-card{border:1px solid var(--ui-line);border-top:4px solid var(--ui-accent);border-radius:var(--ui-radius-panel);padding:24px;background:var(--ui-surface)}.pair-request-card h2{margin:8px 0 12px}.confirm-line{display:flex;align-items:flex-start;gap:10px;margin:18px 0}.confirm-line input{margin-top:5px}
 body.first-use-mode[data-guide-step="persona"] #persona-label,
 body.first-use-mode[data-guide-step="persona"] #user-name-label,
 body.first-use-mode[data-guide-step="persona"] #stage-label,
@@ -131,6 +141,14 @@ body:not(.first-use-mode) #chat-form .task-actions button{padding:8px 14px;backg
 #chat-status{margin-top:5px;line-height:1.5;max-height:34px;overflow:auto}
 #session-dialog{width:min(620px,94vw)}#session-dialog>#resume-session{border:0;box-shadow:none;padding:10px 0;margin:0}
 #session-dialog>.text-button{display:block;margin-left:auto;padding:8px}
+#job-switch-dialog{width:min(520px,94vw);max-height:76vh;overflow:auto;border:1px solid #dce5da;border-radius:14px;padding:18px;background:#fcfdf9}
+#job-switch-dialog::backdrop{background:#17332755}
+#job-switch-dialog .dialog-heading{display:flex;align-items:center;justify-content:space-between}
+#job-switch-search{width:100%;margin:12px 0}
+#job-switch-list{display:grid;gap:8px;max-height:52vh;overflow:auto}
+#job-switch-list button{text-align:left;white-space:normal}
+#job-switch-list button.selected{outline:2px solid #648b66}
+#job-links-list p{display:flex;align-items:center;justify-content:space-between;gap:12px;overflow-wrap:anywhere}
 #screen-opportunities #opportunity-list .job-list button{padding:10px 12px;font-size:14px;line-height:1.5}
 #screen-opportunities #opportunity-title{font-size:22px;margin-top:0}
 #screen-opportunities #opportunity-overview{display:block}
@@ -142,6 +160,17 @@ body:not(.first-use-mode) #chat-form .task-actions button{padding:8px 14px;backg
 #screen-opportunities .task>summary small{display:inline;margin-left:12px;font-size:11px;font-weight:400}
 #screen-opportunities .task[open]>summary{padding-bottom:12px;margin-bottom:8px;border-bottom:1px solid #e9eee3}
 #screen-opportunities .task:not([open]){background:#f8faf5}
+.turn .fact-from-chat{background:transparent;color:#41664c;border:1px solid #d6e1d2;padding:5px 9px;margin-left:36px}
+.turn .fact-from-chat.suggested{background:#e8f1df;border-color:#a7c19c;font-weight:600}
+#chat-fact-note{color:#48634b;background:#eef4e9;padding:10px 12px;border-radius:8px}
 body:not(.first-use-mode) .badge{font-size:11px;border:0;padding:0}
 @media(max-width:760px){body:not(.first-use-mode) main{padding:0 12px 16px}body:not(.first-use-mode)>header{padding:0 16px}.workspace-nav button{font-size:13px}body:not(.first-use-mode) #screen-chat #chat-panel{padding:12px}.chat-tools{gap:8px}.chat-tools button{font-size:11px}#chat-title{max-width:45%}.opportunity-layout{gap:12px}#chat-form .task-actions button{flex:1;padding:8px 4px!important}.task>summary small{display:block!important;margin-left:0!important}}
 @media(max-height:600px){body:not(.first-use-mode)>header{height:42px;flex-shrink:0}body:not(.first-use-mode) .workspace-nav{min-height:45px;padding:4px 0}#chat-status{display:none}}
+
+/* RC4.3.34 settings areas: preserve existing APIs while making responsibilities visible. */
+.settings-shell .settings-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0 24px}.settings-status-card{display:flex;flex-direction:column;gap:6px;padding:16px;border:1px solid var(--ui-line,#dfe8da);border-radius:12px;background:var(--ui-surface-soft,#f8fbf5)}.settings-status-card span,.settings-kicker{font-size:10px;letter-spacing:1.2px;color:var(--ui-muted,#789174)}.settings-status-card strong{font-size:15px;color:var(--ui-ink,#294b35)}.settings-status-card small{min-height:32px}.settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.settings-region{margin:0;padding:20px;border:1px solid var(--ui-line,#e0e8dc);border-radius:13px;background:var(--ui-surface,#fff)}.settings-region-model{grid-column:span 2}.settings-region-independent{grid-column:span 2}.settings-region-sidebar{grid-column:span 2;max-width:none}.settings-region-meta{grid-column:span 2}.settings-region-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}.settings-region-heading h2{margin:0}.settings-inline-status{padding:10px 12px;border-radius:8px;background:#edf4e9;color:#56715a;font-size:12px}.status-pill{display:inline-flex;padding:4px 8px;border-radius:999px;background:#edf3e9;color:#56715a;font-size:10px;white-space:nowrap}.settings-region-tasks{margin-top:18px;background:#f7faf4}.settings-region-sidebar{margin-top:0}.settings-region-sidebar ol{line-height:1.8}.connection-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--ui-line,#e3e9df)}.connection-row strong{margin-right:auto}.task-model-row{display:grid;grid-template-columns:minmax(150px,1fr) minmax(150px,1fr);gap:10px;align-items:end}.task-model-row label{margin:8px 0}.settings-shell #model-connections h3{margin-top:0}@media(max-width:760px){.settings-shell .settings-overview,.settings-grid{grid-template-columns:1fr}.settings-region-model,.settings-region-independent,.settings-region-sidebar,.settings-region-meta{grid-column:auto}.task-model-row{grid-template-columns:1fr}}
+body.first-use-mode #connections .settings-overview{display:none}body.first-use-mode #connections .settings-grid{display:block}body.first-use-mode #connections .settings-grid>*{display:none}body.first-use-mode[data-guide-step="connection"] #connections .settings-grid>#provider-form,body.first-use-mode[data-guide-step="pairing"] #connections .settings-grid>#extension-pairing{display:block}body.first-use-mode #connections .settings-region{border:0;padding:0;background:transparent}
+
+.company-research-status{font-size:13px;color:#65736b;line-height:1.6}
+.company-research-source details{margin:8px 0}.company-research-source details p{max-height:320px;overflow:auto;overflow-wrap:anywhere}
+.company-research-source strong{overflow-wrap:anywhere}.company-research-source a{display:inline-block;margin-top:8px}

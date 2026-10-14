@@ -11,6 +11,67 @@ from xml.etree import ElementTree
 from .store import Problem, text_field
 
 MAX_FILE = 5 * 1024 * 1024
+WORD_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+MC_NS = "http://schemas.openxmlformats.org/markup-compatibility/2006"
+
+
+def _docx_paragraphs(root):
+    """Yield only outer paragraphs; nested text-box paragraphs belong to them."""
+    parents = {child: parent for parent in root.iter() for child in parent}
+    for paragraph in root.iter(f"{{{WORD_NS}}}p"):
+        parent = parents.get(paragraph)
+        nested = False
+        while parent is not None:
+            if parent.tag == f"{{{WORD_NS}}}p":
+                nested = True
+                break
+            parent = parents.get(parent)
+        if not nested:
+            yield paragraph
+
+
+def _docx_paragraph_text(paragraph):
+    pieces = []
+
+    def visit(node):
+        if node.tag in {f"{{{WORD_NS}}}del", f"{{{WORD_NS}}}moveFrom", f"{{{MC_NS}}}Fallback"}:
+            return
+        if node.tag == f"{{{WORD_NS}}}t":
+            pieces.append(node.text or "")
+            return
+        if node.tag == f"{{{WORD_NS}}}tab":
+            pieces.append("\t")
+            return
+        if node.tag in {f"{{{WORD_NS}}}br", f"{{{WORD_NS}}}cr"}:
+            pieces.append("\n")
+            return
+        for child in node:
+            visit(child)
+
+    visit(paragraph)
+    return "".join(pieces)
+
+
+def _docx_text(archive, document_xml):
+    roots = [ElementTree.fromstring(document_xml)]
+    story_parts = sorted(
+        name for name in archive.namelist()
+        if re.fullmatch(r"word/(?:header|footer)\d+\.xml", name)
+    )
+    total_size = len(document_xml)
+    for name in story_parts:
+        info = archive.getinfo(name)
+        total_size += info.file_size
+        if total_size > MAX_FILE:
+            raise Problem("DOCX 文本过大")
+        xml = archive.read(info)
+        if b"<!DOCTYPE" in xml or b"<!ENTITY" in xml:
+            raise Problem("不支持含自定义实体的 DOCX")
+        roots.append(ElementTree.fromstring(xml))
+    return "\n".join(
+        text for root in roots for paragraph in _docx_paragraphs(root)
+        if (text := _docx_paragraph_text(paragraph))
+    )
 
 
 def clean_text(value):
@@ -37,7 +98,10 @@ def import_document(store, payload):
     status = "extracted"
     try:
         if suffix in {".txt", ".md"}:
-            extracted = raw.decode("utf-8-sig")
+            try:
+                extracted = raw.decode("utf-8-sig")
+            except UnicodeDecodeError:
+                extracted = raw.decode("gb18030")
         elif suffix == ".docx":
             with zipfile.ZipFile(io.BytesIO(raw)) as archive:
                 info = archive.getinfo("word/document.xml")
@@ -46,9 +110,7 @@ def import_document(store, payload):
                 xml = archive.read(info)
                 if b"<!DOCTYPE" in xml or b"<!ENTITY" in xml:
                     raise Problem("不支持含自定义实体的 DOCX")
-                root = ElementTree.fromstring(xml)
-                ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
-                extracted = "\n".join("".join(p.itertext()) for p in root.findall(".//w:p", ns))
+                extracted = _docx_text(archive, xml)
         else:
             if not raw.startswith(b"%PDF-"):
                 raise Problem("无效的 PDF 文件")
@@ -59,7 +121,16 @@ def import_document(store, payload):
             else:
                 reader = PdfReader(io.BytesIO(raw))
                 if reader.is_encrypted:
-                    extracted, status = "", "encrypted"
+                    try:
+                        unlocked = reader.decrypt("")
+                    except Exception:
+                        unlocked = 0
+                    if not unlocked:
+                        extracted, status = "", "encrypted"
+                    else:
+                        if len(reader.pages) > 30:
+                            raise Problem("简历 PDF 最大支持 30 页")
+                        extracted = "\n".join(page.extract_text() or "" for page in reader.pages)
                 else:
                     if len(reader.pages) > 30:
                         raise Problem("简历 PDF 最大支持 30 页")

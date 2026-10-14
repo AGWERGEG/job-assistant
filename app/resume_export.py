@@ -28,6 +28,8 @@ def export_resume(store,version_id,format,content=None):
         row=db.execute('SELECT * FROM resume_versions WHERE id=?',(version_id,)).fetchone()
     if not row:raise Problem('简历版本不存在',404)
     content=row['content'] if content is None else content
+    # XML and PDF libraries reject these controls. Keep intentional line/tab breaks.
+    content=re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', content)
     out=io.BytesIO()
     if format=='docx':
         try:
@@ -69,7 +71,11 @@ def export_resume(store,version_id,format,content=None):
         candidates=[os.environ.get('JOB_ASSISTANT_CJK_FONT',''),'/System/Library/Fonts/STHeiti Light.ttc','C:/Windows/Fonts/msyh.ttc','C:/Windows/Fonts/simsun.ttc','/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc']
         font=next((p for p in candidates if p and Path(p).is_file()),None)
         if not font:raise Problem('PDF需可嵌入的中文TTF字体；设置JOB_ASSISTANT_CJK_FONT后重试，或先导出Word',503)
-        pdfmetrics.registerFont(TTFont('ResumeCJK',font,subfontIndex=0))
+        from reportlab.pdfbase.ttfonts import TTFError
+        try:
+            pdfmetrics.registerFont(TTFont('ResumeCJK',font,subfontIndex=0))
+        except (TTFError, OSError, ValueError):
+            raise Problem('这个字体不支持 PDF 嵌入；请选择中文 TTF 字体，或先导出 Word',503)
         body=ParagraphStyle('body',fontName='ResumeCJK',fontSize=11,leading=17,spaceAfter=6,wordWrap='CJK')
         title=ParagraphStyle('title',parent=body,fontSize=20,leading=28,spaceAfter=16)
         heading=ParagraphStyle('heading',parent=body,fontSize=13,leading=20,spaceBefore=10,spaceAfter=6,keepWithNext=True)
